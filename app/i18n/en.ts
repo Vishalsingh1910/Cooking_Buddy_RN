@@ -6,6 +6,8 @@ const en = {
     cancel: "Cancel",
     back: "Back",
     logOut: "Log Out",
+    getStarted: "Get Started",
+    next: "Next",
   },
   welcomeScreen: {
     postscript:
