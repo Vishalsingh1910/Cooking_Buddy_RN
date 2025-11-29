@@ -1,6 +1,8 @@
+import React from "react"
 import {
   Image,
   ImageStyle,
+  ImageSourcePropType,
   StyleProp,
   TouchableOpacity,
   TouchableOpacityProps,
@@ -10,46 +12,84 @@ import {
 } from "react-native"
 
 import { useAppTheme } from "@/theme/context"
+import {
+  MaterialCommunityIcons,
+  Ionicons,
+  Feather,
+  MaterialIcons,
+  FontAwesome,
+  FontAwesome6,
+} from "@expo/vector-icons"
+
+type ImageEntry = { kind: "image"; src: ImageSourcePropType }
+type VectorEntry = { kind: "vector"; pack: VectorPackKey; name: string }
+type IconEntry = ImageEntry | VectorEntry
 
 export type IconTypes = keyof typeof iconRegistry
 
 type BaseIconProps = {
-  /**
-   * The name of the icon
-   */
   icon: IconTypes
-
-  /**
-   * An optional tint color for the icon
-   */
   color?: string
-
-  /**
-   * An optional size for the icon. If not provided, the icon will be sized to the icon's resolution.
-   */
   size?: number
-
-  /**
-   * Style overrides for the icon image
-   */
   style?: StyleProp<ImageStyle>
-
-  /**
-   * Style overrides for the icon container
-   */
   containerStyle?: StyleProp<ViewStyle>
 }
 
 type PressableIconProps = Omit<TouchableOpacityProps, "style"> & BaseIconProps
 type IconProps = Omit<ViewProps, "style"> & BaseIconProps
 
-/**
- * A component to render a registered icon.
- * It is wrapped in a <TouchableOpacity />
- * @see [Documentation and Examples]{@link https://docs.infinite.red/ignite-cli/boilerplate/app/components/Icon/}
- * @param {PressableIconProps} props - The props for the `PressableIcon` component.
- * @returns {JSX.Element} The rendered `PressableIcon` component.
- */
+type VectorPackKey = "MaterialCommunityIcons" | "Ionicons" | "Feather" | "MaterialIcons" | "FontAwesome" | "FontAwesome6"
+
+const VECTOR_PACKS: Record<VectorPackKey, any> = {
+  MaterialCommunityIcons,
+  Ionicons,
+  Feather,
+  MaterialIcons,
+  FontAwesome,
+  FontAwesome6,
+}
+
+export const iconRegistry = {
+  back: { kind: "image", src: require("@assets/icons/back.png") },
+  bell: { kind: "image", src: require("@assets/icons/bell.png") },
+  caretLeft: { kind: "image", src: require("@assets/icons/caretLeft.png") },
+  caretRight: { kind: "image", src: require("@assets/icons/caretRight.png") },
+  check: { kind: "image", src: require("@assets/icons/check.png") },
+  clap: { kind: "image", src: require("@assets/icons/demo/clap.png") },
+  community: { kind: "image", src: require("@assets/icons/demo/community.png") },
+  components: { kind: "image", src: require("@assets/icons/demo/components.png") },
+  debug: { kind: "image", src: require("@assets/icons/demo/debug.png") },
+  github: { kind: "image", src: require("@assets/icons/demo/github.png") },
+  heart: { kind: "image", src: require("@assets/icons/demo/heart.png") },
+  hidden: { kind: "image", src: require("@assets/icons/hidden.png") },
+  ladybug: { kind: "image", src: require("@assets/icons/ladybug.png") },
+  lock: { kind: "image", src: require("@assets/icons/lock.png") },
+  menu: { kind: "image", src: require("@assets/icons/menu.png") },
+  more: { kind: "image", src: require("@assets/icons/more.png") },
+  pin: { kind: "image", src: require("@assets/icons/demo/pin.png") },
+  podcast: { kind: "image", src: require("@assets/icons/demo/podcast.png") },
+  settings: { kind: "image", src: require("@assets/icons/settings.png") },
+  slack: { kind: "image", src: require("@assets/icons/demo/slack.png") },
+  view: { kind: "image", src: require("@assets/icons/view.png") },
+  x: { kind: "image", src: require("@assets/icons/x.png") },
+
+  // Vector icons
+  chef: { kind: "vector", pack: "MaterialCommunityIcons", name: "chef-hat" },
+  robot: { kind: "vector", pack: "FontAwesome6", name: "robot" },
+  users: { kind: "vector", pack: "Feather", name: "users" },
+} as const
+
+
+function renderIcon(entry: IconEntry, size: number | undefined, color: string | undefined, imageStyle: StyleProp<ImageStyle>) {
+  if (entry.kind === "image") {
+    return <Image source={entry.src} style={[{ width: size, height: size, resizeMode: "contain", tintColor: color }, imageStyle]} />
+  }
+  const Pack = VECTOR_PACKS[entry.pack]
+  const finalSize = size ?? 24
+  const finalColor = color ?? undefined
+  return <Pack name={entry.name} size={finalSize} color={finalColor} />
+}
+
 export function PressableIcon(props: PressableIconProps) {
   const {
     icon,
@@ -62,27 +102,17 @@ export function PressableIcon(props: PressableIconProps) {
 
   const { theme } = useAppTheme()
 
-  const $imageStyle: StyleProp<ImageStyle> = [
-    $imageStyleBase,
-    { tintColor: color ?? theme.colors.text },
-    size !== undefined && { width: size, height: size },
-    $imageStyleOverride,
-  ]
+  const registryEntry = iconRegistry[icon] as IconEntry
+  const finalColor = color ?? theme.colors.text
+  const finalSize = size
 
   return (
     <TouchableOpacity {...pressableProps} style={$containerStyleOverride}>
-      <Image style={$imageStyle} source={iconRegistry[icon]} />
+      {renderIcon(registryEntry, finalSize, finalColor, $imageStyleOverride as ImageStyle)}
     </TouchableOpacity>
   )
 }
 
-/**
- * A component to render a registered icon.
- * It is wrapped in a <View />, use `PressableIcon` if you want to react to input
- * @see [Documentation and Examples]{@link https://docs.infinite.red/ignite-cli/boilerplate/app/components/Icon/}
- * @param {IconProps} props - The props for the `Icon` component.
- * @returns {JSX.Element} The rendered `Icon` component.
- */
 export function Icon(props: IconProps) {
   const {
     icon,
@@ -95,45 +125,13 @@ export function Icon(props: IconProps) {
 
   const { theme } = useAppTheme()
 
-  const $imageStyle: StyleProp<ImageStyle> = [
-    $imageStyleBase,
-    { tintColor: color ?? theme.colors.text },
-    size !== undefined && { width: size, height: size },
-    $imageStyleOverride,
-  ]
+  const registryEntry = iconRegistry[icon] as IconEntry
+  const finalColor = color ?? theme.colors.text
+  const finalSize = size
 
   return (
     <View {...viewProps} style={$containerStyleOverride}>
-      <Image style={$imageStyle} source={iconRegistry[icon]} />
+      {renderIcon(registryEntry, finalSize, finalColor, $imageStyleOverride as ImageStyle)}
     </View>
   )
-}
-
-export const iconRegistry = {
-  back: require("@assets/icons/back.png"),
-  bell: require("@assets/icons/bell.png"),
-  caretLeft: require("@assets/icons/caretLeft.png"),
-  caretRight: require("@assets/icons/caretRight.png"),
-  check: require("@assets/icons/check.png"),
-  clap: require("@assets/icons/demo/clap.png"),
-  community: require("@assets/icons/demo/community.png"),
-  components: require("@assets/icons/demo/components.png"),
-  debug: require("@assets/icons/demo/debug.png"),
-  github: require("@assets/icons/demo/github.png"),
-  heart: require("@assets/icons/demo/heart.png"),
-  hidden: require("@assets/icons/hidden.png"),
-  ladybug: require("@assets/icons/ladybug.png"),
-  lock: require("@assets/icons/lock.png"),
-  menu: require("@assets/icons/menu.png"),
-  more: require("@assets/icons/more.png"),
-  pin: require("@assets/icons/demo/pin.png"),
-  podcast: require("@assets/icons/demo/podcast.png"),
-  settings: require("@assets/icons/settings.png"),
-  slack: require("@assets/icons/demo/slack.png"),
-  view: require("@assets/icons/view.png"),
-  x: require("@assets/icons/x.png"),
-}
-
-const $imageStyleBase: ImageStyle = {
-  resizeMode: "contain",
 }
