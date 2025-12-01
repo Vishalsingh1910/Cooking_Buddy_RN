@@ -10,13 +10,15 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack"
 import Config from "@/config"
 import { useAuth } from "@/context/AuthContext"
 import { ErrorBoundary } from "@/screens/ErrorScreen/ErrorBoundary"
-import { LoginScreen } from "@/screens/LoginScreen"
+import { LoginScreen } from "@/screens/Auth/LoginScreen"
 import { WelcomeScreen } from "@/screens/WelcomeScreen"
 import { useAppTheme } from "@/theme/context"
 
 import { DemoNavigator } from "./DemoNavigator"
 import { navigationRef, useBackButtonHandler } from "./navigationUtilities"
 import type { AppStackParamList, NavigationProps } from "./navigationTypes"
+import { SignupScreen } from "@/screens/Auth/SignUpScreen"
+import { ForgotPasswordScreen } from "@/screens/Auth/ForgotPasswordScreen"
 
 /**
  * This is a list of all the route names that will exit the app if the back button
@@ -53,6 +55,8 @@ const AppStack = () => {
         <>
           <Stack.Screen name="Welcome" component={WelcomeScreen} />
           <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="SignUp" component={SignupScreen} />
+          <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
         </>
       )}
 
