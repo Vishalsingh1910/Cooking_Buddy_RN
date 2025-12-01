@@ -44,6 +44,9 @@ const en = {
     passwordFieldPlaceholder: "Super secret password here",
     tapToLogIn: "Tap to log in!",
     hint: "Hint: you can use any email address and your favorite password :)",
+    forgotPassword: "Forgot password?",
+    noAccount: "Don't have an account?",
+    signUp: "Sign Up",
   },
   demoNavigator: {
     componentsTab: "Components",

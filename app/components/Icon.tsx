@@ -19,6 +19,7 @@ import {
   MaterialIcons,
   FontAwesome,
   FontAwesome6,
+  AntDesign,
 } from "@expo/vector-icons"
 
 type ImageEntry = { kind: "image"; src: ImageSourcePropType }
@@ -38,7 +39,7 @@ type BaseIconProps = {
 type PressableIconProps = Omit<TouchableOpacityProps, "style"> & BaseIconProps
 type IconProps = Omit<ViewProps, "style"> & BaseIconProps
 
-type VectorPackKey = "MaterialCommunityIcons" | "Ionicons" | "Feather" | "MaterialIcons" | "FontAwesome" | "FontAwesome6"
+type VectorPackKey = "MaterialCommunityIcons" | "Ionicons" | "Feather" | "MaterialIcons" | "FontAwesome" | "FontAwesome6" | "AntDesign"
 
 const VECTOR_PACKS: Record<VectorPackKey, any> = {
   MaterialCommunityIcons,
@@ -47,6 +48,7 @@ const VECTOR_PACKS: Record<VectorPackKey, any> = {
   MaterialIcons,
   FontAwesome,
   FontAwesome6,
+  AntDesign,
 }
 
 export const iconRegistry = {
@@ -77,6 +79,7 @@ export const iconRegistry = {
   chef: { kind: "vector", pack: "MaterialCommunityIcons", name: "chef-hat" },
   robot: { kind: "vector", pack: "FontAwesome6", name: "robot" },
   users: { kind: "vector", pack: "Feather", name: "users" },
+  google: { kind: "vector", pack: "AntDesign", name: "google" },
 } as const
 
 
