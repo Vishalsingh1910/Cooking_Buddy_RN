@@ -18,6 +18,7 @@ import { useAuth } from "@/context/AuthContext"
 import type { AppStackScreenProps } from "@/navigators/navigationTypes"
 import { useAppTheme } from "@/theme/context"
 import { supabase } from "@/services/supabase/supabase"
+import GoogleSignInButton from "@/components/GoogleSignInButton"
 
 interface LoginScreenProps extends AppStackScreenProps<"Login"> {}
 
@@ -197,14 +198,15 @@ export const LoginScreen: FC<LoginScreenProps> = ({ navigation }) => {
       </View>
 
       {/* Social login */}
-      <TouchableOpacity style={themed($socialButton)} onPress={signInWithGoogle} disabled={isGoogleLoading}>
+      {/* <TouchableOpacity style={themed($socialButton)} onPress={signInWithGoogle} disabled={isGoogleLoading}>
         <PressableIcon icon="google" size={20} color={theme.colors.palette.neutral800} containerStyle={themed($socialIcon)} />
         {isGoogleLoading ? (
           <ActivityIndicator style={themed($socialLoader)} />
         ) : (
           <Text style={themed($socialText)}>Continue with Google</Text>
         )}
-      </TouchableOpacity>
+      </TouchableOpacity> */}
+      <GoogleSignInButton />
 
       {/* Sign up row */}
       <View style={themed($signupRow)}>

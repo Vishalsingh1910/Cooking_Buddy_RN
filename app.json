@@ -1,7 +1,7 @@
 {
   "name": "Cooking Buddy",
   "slug": "CookingBuddy",
-  "scheme": "cookingbuddy",
+  "scheme": "com.startup.cooking_buddy",
   "version": "1.0.0",
   "orientation": "portrait",
   "userInterfaceStyle": "automatic",
@@ -14,7 +14,7 @@
   "assetBundlePatterns": ["**/*"],
   "android": {
     "icon": "./assets/images/app-icon-android-legacy.png",
-    "package": "com.cookingbuddy",
+    "package": "com.startup.cooking_buddy",
     "allowBackup": false,
     "edgeToEdgeEnabled": true
   },
@@ -47,6 +47,9 @@
           "enforceNavigationBarContrast": false
         }
       }
+    ],
+    [
+      "expo-web-browser"
     ],
     "expo-build-properties"
   ],
