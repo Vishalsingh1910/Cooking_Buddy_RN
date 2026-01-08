@@ -127,14 +127,12 @@ export const LoginScreen: FC<LoginScreenProps> = ({ navigation }) => {
 
   return (
     <Screen preset="auto" contentContainerStyle={themed($screenContentContainer)} safeAreaEdges={["top"]}>
-      {/* Logo box similar to Flutter */}
       <View style={themed($logoBox)}>
         <PressableIcon icon="chef" size={40} color="#fff" />
       </View>
 
       <View style={themed($spacer)} />
 
-      {/* Auth card */}
       <View style={themed($authCard)}>
         <Text preset="heading" style={themed($authTitle)}>
           Welcome Back
