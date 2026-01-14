@@ -20,7 +20,7 @@ import { useAppTheme } from "@/theme/context"
 import { supabase } from "@/services/supabase/supabase"
 import GoogleSignInButton from "@/components/GoogleSignInButton"
 
-interface LoginScreenProps extends AppStackScreenProps<"Login"> {}
+interface LoginScreenProps extends AppStackScreenProps<"Login"> { }
 
 export const LoginScreen: FC<LoginScreenProps> = ({ navigation }) => {
   const authPasswordInput = useRef<TextInput>(null)
@@ -32,8 +32,9 @@ export const LoginScreen: FC<LoginScreenProps> = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
 
-  const { authEmail, setAuthEmail, setAuthToken, validationError } = useAuth()
+  const { checkUser } = useAuth()
   const { themed, theme } = useAppTheme()
+  const [authEmail, setAuthEmail] = useState("")
 
   const isSubmittingRef = useRef(false)
   const isMountedRef = useRef(true)
@@ -42,6 +43,13 @@ export const LoginScreen: FC<LoginScreenProps> = ({ navigation }) => {
       isMountedRef.current = false
     }
   }, [])
+
+  const validationError = useMemo(() => {
+    if (!authEmail || authEmail.length === 0) return "can't be blank"
+    if (authEmail.length < 6) return "must be at least 6 characters"
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(authEmail)) return "must be a valid email address"
+    return ""
+  }, [authEmail])
 
   const error = isSubmitted ? validationError : ""
 
@@ -76,10 +84,10 @@ export const LoginScreen: FC<LoginScreenProps> = ({ navigation }) => {
       }
 
       // success: reset attempts, set auth token and navigate
+      // success: reset attempts, check user to update context
       if (isMountedRef.current) {
         setAttemptsCount(0)
-        setAuthToken(session.access_token)
-        // navigation.replace("Demo") // <-- enable & replace "Demo" with your main route
+        // Context listener will handle navigation
       }
     } catch (e) {
       setIsLoading(false)
@@ -97,9 +105,9 @@ export const LoginScreen: FC<LoginScreenProps> = ({ navigation }) => {
     setIsGoogleLoading(true)
     try {
       // call your real google sign-in service
-      await new Promise((res) => setTimeout(res, 900))
-      setAuthToken("google:" + String(Date.now()))
-      // navigation.replace("Demo")
+      // await new Promise((res) => setTimeout(res, 900))
+      // setAuthToken("google:" + String(Date.now()))
+      Alert.alert("Not implemented", "Google Sign-In needs native setup")
     } catch (e) {
       Alert.alert("Google sign-in failed", String(e))
     } finally {
@@ -175,8 +183,8 @@ export const LoginScreen: FC<LoginScreenProps> = ({ navigation }) => {
               onPress={login}
               style={themed($loginButton)}
               disabled={isLoading}
-              // show loader on right using RightAccessory prop if your Button supports it
-              // fallback: if your Button doesn't support RightAccessory, show ActivityIndicator as children
+            // show loader on right using RightAccessory prop if your Button supports it
+            // fallback: if your Button doesn't support RightAccessory, show ActivityIndicator as children
             >
               {isLoading ? <ActivityIndicator color={theme.colors.palette.accent100} /> : <Text tx="loginScreen:logIn" preset="subheading" />}
             </Button>
@@ -219,148 +227,148 @@ export const LoginScreen: FC<LoginScreenProps> = ({ navigation }) => {
 
 /* Styles */
 const $screenContentContainer = ({ spacing }: any) =>
-  ({
-    padding: spacing.lg,
-    alignItems: "center",
-  } as ViewStyle)
+({
+  padding: spacing.lg,
+  alignItems: "center",
+} as ViewStyle)
 
 const $logoBox = ({ colors }: any) =>
-  ({
-    width: 80,
-    height: 80,
-    borderRadius: 20,
-    backgroundColor: colors.palette.appPrimary,
-    alignItems: "center",
-    justifyContent: "center",
-  } as ViewStyle)
+({
+  width: 80,
+  height: 80,
+  borderRadius: 20,
+  backgroundColor: colors.palette.appPrimary,
+  alignItems: "center",
+  justifyContent: "center",
+} as ViewStyle)
 
 const $spacer = ({ spacing }: any) =>
-  ({
-    height: 24,
-  } as ViewStyle)
+({
+  height: 24,
+} as ViewStyle)
 
 const $authCard = ({ colors, spacing }: any) =>
-  ({
-    width: "100%",
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: spacing.lg,
-    shadowColor: "#c4adadff",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.01,
-    shadowRadius: 3,
-    elevation: 1,
-  } as ViewStyle)
+({
+  width: "100%",
+  backgroundColor: colors.surface,
+  borderRadius: 12,
+  padding: spacing.lg,
+  shadowColor: "#c4adadff",
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.01,
+  shadowRadius: 3,
+  elevation: 1,
+} as ViewStyle)
 
 const $authTitle = ({ spacing }: any) =>
-  ({
-    textAlign: "center",
-    marginBottom: spacing.md,
-  } as TextStyle)
+({
+  textAlign: "center",
+  marginBottom: spacing.md,
+} as TextStyle)
 
-const $form = ({}: any) =>
-  ({
-    width: "100%",
-  } as ViewStyle)
+const $form = ({ }: any) =>
+({
+  width: "100%",
+} as ViewStyle)
 
 const $textField = ({ spacing }: any) =>
-  ({
-    marginBottom: spacing.md,
-  } as ViewStyle)
+({
+  marginBottom: spacing.md,
+} as ViewStyle)
 
 const $loginButtonWrapper = ({ spacing }: any) =>
-  ({
-    marginTop: spacing.sm,
-  } as ViewStyle)
+({
+  marginTop: spacing.sm,
+} as ViewStyle)
 
 const $loginButton = ({ colors }: any) =>
-  ({
-    borderRadius: 25,
-    backgroundColor: colors.palette.appPrimary,
-    paddingVertical: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 0,
-  } as ViewStyle)
+({
+  borderRadius: 25,
+  backgroundColor: colors.palette.appPrimary,
+  paddingVertical: 14,
+  alignItems: "center",
+  justifyContent: "center",
+  borderWidth: 0,
+} as ViewStyle)
 
 const $forgotButton = ({ spacing }: any) =>
-  ({
-    marginTop: spacing.sm,
-    alignSelf: "center",
-  } as ViewStyle)
+({
+  marginTop: spacing.sm,
+  alignSelf: "center",
+} as ViewStyle)
 
 const $forgotText = ({ colors }: any) =>
-  ({
-    color: colors.palette.appPrimary,
-    fontWeight: "500",
-  } as TextStyle)
+({
+  color: colors.palette.appPrimary,
+  fontWeight: "500",
+} as TextStyle)
 
 const $dividerRow = ({ spacing }: any) =>
-  ({
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: spacing.lg,
-    width: "100%",
-  } as ViewStyle)
+({
+  flexDirection: "row",
+  alignItems: "center",
+  marginTop: spacing.lg,
+  width: "100%",
+} as ViewStyle)
 
 const $dividerLine = ({ colors }: any) =>
-  ({
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.palette.neutral300,
-  } as ViewStyle)
+({
+  flex: 1,
+  height: 1,
+  backgroundColor: colors.palette.neutral300,
+} as ViewStyle)
 
 const $dividerText = ({ spacing, colors }: any) =>
-  ({
-    marginHorizontal: spacing.md,
-    color: colors.palette.neutral500,
-  } as TextStyle)
+({
+  marginHorizontal: spacing.md,
+  color: colors.palette.neutral500,
+} as TextStyle)
 
 const $socialButton = ({ colors, spacing }: any) =>
-  ({
-    marginTop: 16,
-    width: "100%",
-    backgroundColor: colors.palette.neutral0,
-    borderRadius: 8,
-    paddingVertical: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    flexDirection: "row",
-    borderWidth: 1,
-    borderColor: colors.palette.neutral200,
-  } as ViewStyle)
+({
+  marginTop: 16,
+  width: "100%",
+  backgroundColor: colors.palette.neutral0,
+  borderRadius: 8,
+  paddingVertical: 12,
+  alignItems: "center",
+  justifyContent: "center",
+  flexDirection: "row",
+  borderWidth: 1,
+  borderColor: colors.palette.neutral200,
+} as ViewStyle)
 
 const $socialIcon = ({ spacing }: any) =>
-  ({
-    marginRight: spacing.md,
-  } as ViewStyle)
+({
+  marginRight: spacing.md,
+} as ViewStyle)
 
 const $socialText = ({ colors }: any) =>
-  ({
-    color: colors.textPrimary,
-    fontWeight: "500",
-  } as TextStyle)
+({
+  color: colors.textPrimary,
+  fontWeight: "500",
+} as TextStyle)
 
 const $socialLoader = ({ spacing }: any) =>
-  ({
-    marginLeft: spacing.md,
-  } as ViewStyle)
+({
+  marginLeft: spacing.md,
+} as ViewStyle)
 
 const $signupRow = ({ spacing }: any) =>
-  ({
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 24,
-  } as ViewStyle)
+({
+  flexDirection: "row",
+  alignItems: "center",
+  marginTop: 24,
+} as ViewStyle)
 
 const $noAccount = ({ colors }: any) =>
-  ({
-    color: colors.palette.neutral600,
-    marginRight: 6,
-  } as TextStyle)
+({
+  color: colors.palette.neutral600,
+  marginRight: 6,
+} as TextStyle)
 
 const $signUp = ({ colors }: any) =>
-  ({
-    color: colors.palette.appPrimary,
-    fontWeight: "600",
-  } as TextStyle)
+({
+  color: colors.palette.appPrimary,
+  fontWeight: "600",
+} as TextStyle)

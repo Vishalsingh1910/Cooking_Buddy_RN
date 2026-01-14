@@ -1,44 +1,62 @@
-import { createContext, FC, PropsWithChildren, useCallback, useContext, useMemo } from "react"
-import { useMMKVString } from "react-native-mmkv"
+import { Session } from "@supabase/supabase-js"
+import { createContext, FC, PropsWithChildren, useEffect, useState, useContext } from "react"
+import { supabase } from "@/services/supabase/supabase"
 
 export type AuthContextType = {
   isAuthenticated: boolean
-  authToken?: string
-  authEmail?: string
-  setAuthToken: (token?: string) => void
-  setAuthEmail: (email: string) => void
-  logout: () => void
-  validationError: string
+  session: Session | null
+  userEmail?: string
+  isLoading: boolean
+  checkUser: () => Promise<void>
+  logout: () => Promise<void>
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null)
 
-export interface AuthProviderProps {}
+export const AuthProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
+  const [session, setSession] = useState<Session | null>(null)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
-export const AuthProvider: FC<PropsWithChildren<AuthProviderProps>> = ({ children }) => {
-  const [authToken, setAuthToken] = useMMKVString("AuthProvider.authToken")
-  const [authEmail, setAuthEmail] = useMMKVString("AuthProvider.authEmail")
+  useEffect(() => {
+    // Check initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+      setIsAuthenticated(!!session)
+      setIsLoading(false)
+    })
 
-  const logout = useCallback(() => {
-    setAuthToken(undefined)
-    setAuthEmail("")
-  }, [setAuthEmail, setAuthToken])
+    // Listen for changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+      setIsAuthenticated(!!session)
+      setIsLoading(false)
+    })
 
-  const validationError = useMemo(() => {
-    if (!authEmail || authEmail.length === 0) return "can't be blank"
-    if (authEmail.length < 6) return "must be at least 6 characters"
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(authEmail)) return "must be a valid email address"
-    return ""
-  }, [authEmail])
+    return () => subscription.unsubscribe()
+  }, [])
+
+  const logout = async () => {
+    await supabase.auth.signOut()
+    setIsAuthenticated(false)
+    setSession(null)
+  }
+
+  const checkUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    setSession(session)
+    setIsAuthenticated(!!session)
+  }
 
   const value = {
-    isAuthenticated: !!authToken,
-    authToken,
-    authEmail,
-    setAuthToken,
-    setAuthEmail,
+    isAuthenticated,
+    session,
+    userEmail: session?.user?.email,
+    isLoading,
     logout,
-    validationError,
+    checkUser
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

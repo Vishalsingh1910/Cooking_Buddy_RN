@@ -80,6 +80,34 @@ export const iconRegistry = {
   robot: { kind: "vector", pack: "FontAwesome6", name: "robot" },
   users: { kind: "vector", pack: "Feather", name: "users" },
   google: { kind: "vector", pack: "AntDesign", name: "google" },
+  share: { kind: "vector", pack: "MaterialCommunityIcons", name: "share-variant" },
+  bookmark: { kind: "vector", pack: "MaterialCommunityIcons", name: "bookmark" },
+  bookmarkOutline: { kind: "vector", pack: "MaterialCommunityIcons", name: "bookmark-outline" },
+  heartOutline: { kind: "vector", pack: "MaterialCommunityIcons", name: "heart-outline" },
+  chat: { kind: "vector", pack: "Ionicons", name: "chatbubble-outline" },
+  clock: { kind: "vector", pack: "MaterialCommunityIcons", name: "clock-outline" },
+  star: { kind: "vector", pack: "AntDesign", name: "star" },
+
+  // Tab Icons (Flutter Parity)
+  home: { kind: "vector", pack: "Ionicons", name: "home" },
+  homeOutline: { kind: "vector", pack: "Ionicons", name: "home-outline" },
+  restaurant: { kind: "vector", pack: "MaterialIcons", name: "restaurant-menu" },
+  restaurantOutline: { kind: "vector", pack: "MaterialIcons", name: "restaurant-menu" }, // MaterialIcons might not have outline for this, using same for now or switch pack
+  chatFilled: { kind: "vector", pack: "Ionicons", name: "chatbubble" },
+  // chat already exists
+  search: { kind: "vector", pack: "Ionicons", name: "search" },
+  person: { kind: "vector", pack: "Ionicons", name: "person" },
+  personOutline: { kind: "vector", pack: "Ionicons", name: "person-outline" },
+
+  // Additional icons for AddRecipeScreen
+  image: { kind: "vector", pack: "Ionicons", name: "image-outline" },
+  camera: { kind: "vector", pack: "Ionicons", name: "camera-outline" },
+  plus: { kind: "vector", pack: "Ionicons", name: "add-circle-outline" },
+
+  // Profile section icons
+  people: { kind: "vector", pack: "Ionicons", name: "people" },
+  "person-add": { kind: "vector", pack: "Ionicons", name: "person-add" },
+  help: { kind: "vector", pack: "Ionicons", name: "help-circle" },
 } as const
 
 

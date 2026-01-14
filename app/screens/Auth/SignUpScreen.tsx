@@ -17,8 +17,9 @@ import { TextField, type TextFieldAccessoryProps } from "@/components/TextField"
 import { useAuth } from "@/context/AuthContext"
 import type { AppStackScreenProps } from "@/navigators/navigationTypes"
 import { useAppTheme } from "@/theme/context"
+import { supabase } from "@/services/supabase/supabase"
 
-interface SignupScreenProps extends AppStackScreenProps<"SignUp"> {}
+interface SignupScreenProps extends AppStackScreenProps<"SignUp"> { }
 
 export const SignupScreen: FC<SignupScreenProps> = ({ navigation }) => {
   const nameRef = useRef<TextInput>(null)
@@ -26,7 +27,7 @@ export const SignupScreen: FC<SignupScreenProps> = ({ navigation }) => {
   const passwordRef = useRef<TextInput>(null)
 
   const { themed, theme } = useAppTheme()
-  const { setAuthToken } = useAuth() // reuse your auth setter
+  // const { setAuthToken } = useAuth()
 
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
@@ -47,12 +48,22 @@ export const SignupScreen: FC<SignupScreenProps> = ({ navigation }) => {
 
     setIsLoading(true)
     try {
-      // Replace with actual signup API call (AuthService.createUserWithEmailAndPassword)
-      await new Promise((res) => setTimeout(res, 900))
+      const { error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password: password,
+        options: {
+          data: {
+            full_name: name,
+          },
+        },
+      })
 
-      // on success, set token and navigate
-      setAuthToken(String(Date.now()))
-    //   navigation.replace("Main")
+      if (error) {
+        Alert.alert("Signup failed", error.message)
+        return
+      }
+
+      Alert.alert("Success", "Please check your email to confirm your account.")
     } catch (e) {
       Alert.alert("Signup failed", String(e))
     } finally {
@@ -64,9 +75,9 @@ export const SignupScreen: FC<SignupScreenProps> = ({ navigation }) => {
     setIsGoogleLoading(true)
     try {
       // replace with real google sign-in
-      await new Promise((res) => setTimeout(res, 900))
-      setAuthToken("google:" + String(Date.now()))
-    //   navigation.replace("Main")
+      // await new Promise((res) => setTimeout(res, 900))
+      // setAuthToken("google:" + String(Date.now()))
+      Alert.alert("Not implemented", "Google Sign-In needs native setup")
     } catch (e) {
       Alert.alert("Google sign-in failed", String(e))
     } finally {
@@ -204,155 +215,155 @@ export const SignupScreen: FC<SignupScreenProps> = ({ navigation }) => {
 
 /* Styles */
 const $screenContentContainer = ({ spacing }: any) =>
-  ({
-    padding: spacing.lg,
-    alignItems: "center",
-  } as ViewStyle)
+({
+  padding: spacing.lg,
+  alignItems: "center",
+} as ViewStyle)
 
-const $appBar = ({}: any) =>
-  ({
-    width: "100%",
-    paddingTop: 0,
-    paddingBottom: 0,
-  } as ViewStyle)
+const $appBar = ({ }: any) =>
+({
+  width: "100%",
+  paddingTop: 0,
+  paddingBottom: 0,
+} as ViewStyle)
 
 const $backButton = ({ spacing }: any) =>
-  ({
-    padding: spacing.xs,
-    marginLeft: -8,
-  } as ViewStyle)
+({
+  padding: spacing.xs,
+  marginLeft: -8,
+} as ViewStyle)
 
 const $logoBox = ({ colors }: any) =>
-  ({
-    width: 80,
-    height: 80,
-    borderRadius: 20,
-    backgroundColor: colors.palette.secondary,
-    alignItems: "center",
-    justifyContent: "center",
-  } as ViewStyle)
+({
+  width: 80,
+  height: 80,
+  borderRadius: 20,
+  backgroundColor: colors.palette.secondary,
+  alignItems: "center",
+  justifyContent: "center",
+} as ViewStyle)
 
 const $spacer = ({ spacing }: any) =>
-  ({
-    height: 24,
-  } as ViewStyle)
+({
+  height: 24,
+} as ViewStyle)
 
 const $authCard = ({ colors, spacing }: any) =>
-  ({
-    width: "100%",
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: spacing.lg,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 3,
-  } as ViewStyle)
+({
+  width: "100%",
+  backgroundColor: colors.surface,
+  borderRadius: 12,
+  padding: spacing.lg,
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 6 },
+  shadowOpacity: 0.06,
+  shadowRadius: 12,
+  elevation: 3,
+} as ViewStyle)
 
 const $authTitle = ({ spacing }: any) =>
-  ({
-    textAlign: "center",
-    marginBottom: spacing.md,
-  } as TextStyle)
+({
+  textAlign: "center",
+  marginBottom: spacing.md,
+} as TextStyle)
 
-const $form = ({}: any) =>
-  ({
-    width: "100%",
-  } as ViewStyle)
+const $form = ({ }: any) =>
+({
+  width: "100%",
+} as ViewStyle)
 
 const $textField = ({ spacing }: any) =>
-  ({
-    marginBottom: spacing.md,
-  } as ViewStyle)
+({
+  marginBottom: spacing.md,
+} as ViewStyle)
 
 const $signupButtonWrapper = ({ spacing }: any) =>
-  ({
-    marginTop: spacing.sm,
-  } as ViewStyle)
+({
+  marginTop: spacing.sm,
+} as ViewStyle)
 
 const $signupButton = ({ colors }: any) =>
-  ({
-    borderRadius: 25,
-    backgroundColor: colors.palette.appPrimary,
-    paddingVertical: 14,
-    alignItems: "center",
-    justifyContent: "center",
-  } as ViewStyle)
+({
+  borderRadius: 25,
+  backgroundColor: colors.palette.appPrimary,
+  paddingVertical: 14,
+  alignItems: "center",
+  justifyContent: "center",
+} as ViewStyle)
 
 const $signupButtonText = ({ }: any) =>
-  ({
-    fontSize: 16,
-    fontWeight: "600",
-    color: undefined, // Button will set text color; you can force theme color if needed
-  } as TextStyle)
+({
+  fontSize: 16,
+  fontWeight: "600",
+  color: undefined, // Button will set text color; you can force theme color if needed
+} as TextStyle)
 
 const $dividerRow = ({ spacing }: any) =>
-  ({
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: spacing.lg,
-    width: "100%",
-  } as ViewStyle)
+({
+  flexDirection: "row",
+  alignItems: "center",
+  marginTop: spacing.lg,
+  width: "100%",
+} as ViewStyle)
 
 const $dividerLine = ({ colors }: any) =>
-  ({
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.palette.neutral300,
-  } as ViewStyle)
+({
+  flex: 1,
+  height: 1,
+  backgroundColor: colors.palette.neutral300,
+} as ViewStyle)
 
 const $dividerText = ({ spacing, colors }: any) =>
-  ({
-    marginHorizontal: spacing.md,
-    color: colors.palette.neutral500,
-  } as TextStyle)
+({
+  marginHorizontal: spacing.md,
+  color: colors.palette.neutral500,
+} as TextStyle)
 
 const $socialButton = ({ colors, spacing }: any) =>
-  ({
-    marginTop: 16,
-    width: "100%",
-    backgroundColor: colors.palette.neutral0,
-    borderRadius: 8,
-    paddingVertical: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    flexDirection: "row",
-    borderWidth: 1,
-    borderColor: colors.palette.neutral200,
-  } as ViewStyle)
+({
+  marginTop: 16,
+  width: "100%",
+  backgroundColor: colors.palette.neutral0,
+  borderRadius: 8,
+  paddingVertical: 12,
+  alignItems: "center",
+  justifyContent: "center",
+  flexDirection: "row",
+  borderWidth: 1,
+  borderColor: colors.palette.neutral200,
+} as ViewStyle)
 
 const $socialIcon = ({ spacing }: any) =>
-  ({
-    marginRight: spacing.md,
-  } as ViewStyle)
+({
+  marginRight: spacing.md,
+} as ViewStyle)
 
 const $socialText = ({ colors }: any) =>
-  ({
-    color: colors.textPrimary,
-    fontWeight: "500",
-  } as TextStyle)
+({
+  color: colors.textPrimary,
+  fontWeight: "500",
+} as TextStyle)
 
 const $socialLoader = ({ spacing }: any) =>
-  ({
-    marginLeft: spacing.md,
-  } as ViewStyle)
+({
+  marginLeft: spacing.md,
+} as ViewStyle)
 
 const $loginRow = ({ spacing }: any) =>
-  ({
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 24,
-  } as ViewStyle)
+({
+  flexDirection: "row",
+  alignItems: "center",
+  marginTop: 24,
+} as ViewStyle)
 
 const $noAccount = ({ colors }: any) =>
-  ({
-    color: colors.palette.neutral600,
-    marginRight: 6,
-  } as TextStyle)
+({
+  color: colors.palette.neutral600,
+  marginRight: 6,
+} as TextStyle)
 
 const $loginLink = ({ colors }: any) =>
-  ({
-    color: colors.palette.appPrimary,
-    fontWeight: "600",
-  } as TextStyle)
+({
+  color: colors.palette.appPrimary,
+  fontWeight: "600",
+} as TextStyle)

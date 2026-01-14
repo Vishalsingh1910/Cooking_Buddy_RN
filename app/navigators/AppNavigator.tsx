@@ -19,6 +19,16 @@ import { navigationRef, useBackButtonHandler } from "./navigationUtilities"
 import type { AppStackParamList, NavigationProps } from "./navigationTypes"
 import { SignupScreen } from "@/screens/Auth/SignUpScreen"
 import { ForgotPasswordScreen } from "@/screens/Auth/ForgotPasswordScreen"
+import { RecipeDetailScreen } from "@/screens/RecipeDetailScreen"
+import { ChatDetailScreen } from "@/screens/ChatDetailScreen"
+import { AddRecipeScreen } from "@/screens/AddRecipeScreen"
+import { MyRecipesScreen } from "@/screens/MyRecipesScreen"
+import { SettingsScreen } from "@/screens/SettingsScreen"
+import { EditProfileScreen } from "@/screens/EditProfileScreen"
+import { ChangePasswordScreen } from "@/screens/ChangePasswordScreen"
+import { NotificationsScreen } from "@/screens/NotificationsScreen"
+import { ThemePreferencesScreen } from "@/screens/ThemePreferencesScreen"
+
 
 /**
  * This is a list of all the route names that will exit the app if the back button
@@ -30,11 +40,15 @@ const exitRoutes = Config.exitRoutes
 const Stack = createNativeStackNavigator<AppStackParamList>()
 
 const AppStack = () => {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, isLoading } = useAuth()
 
   const {
     theme: { colors },
   } = useAppTheme()
+
+  if (isLoading) {
+    return null // Retain splash screen (BootSplash) or render a loading view
+  }
 
   return (
     <Stack.Navigator
@@ -50,6 +64,15 @@ const AppStack = () => {
       {isAuthenticated ? (
         <>
           <Stack.Screen name="Demo" component={DemoNavigator} />
+          <Stack.Screen name="RecipeDetail" component={RecipeDetailScreen} />
+          <Stack.Screen name="AddRecipe" component={AddRecipeScreen} />
+          <Stack.Screen name="MyRecipes" component={MyRecipesScreen} />
+          <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
+          <Stack.Screen name="Settings" component={SettingsScreen} />
+          <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+          <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+          <Stack.Screen name="Notifications" component={NotificationsScreen} />
+          <Stack.Screen name="ThemePreferences" component={ThemePreferencesScreen} />
         </>
       ) : (
         <>

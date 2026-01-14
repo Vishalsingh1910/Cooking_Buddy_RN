@@ -77,28 +77,40 @@ export const ThemeProvider: FC<PropsWithChildren<ThemeProviderProps>> = ({
    * initialContext is the theme context passed in from the app.tsx file and always takes precedence.
    * themeScheme is the value from MMKV. If undefined, we fall back to the system theme
    * systemColorScheme is the value from the device. If undefined, we fall back to "light"
+   * 
+   * TEMPORARILY FORCED TO LIGHT MODE - Dark mode disabled for now
    */
   const themeContext: ImmutableThemeContextModeT = useMemo(() => {
-    const t = initialContext || themeScheme || (!!systemColorScheme ? systemColorScheme : "light")
-    return t === "dark" ? "dark" : "light"
+    // Force light mode for now - uncomment below line to re-enable theme switching
+    return "light"
+
+    // Original theme logic (commented out for future use):
+    // const t = initialContext || themeScheme || (!!systemColorScheme ? systemColorScheme : "light")
+    // return t === "dark" ? "dark" : "light"
   }, [initialContext, themeScheme, systemColorScheme])
 
+  // Force light theme for navigation (dark mode disabled)
   const navigationTheme: NavTheme = useMemo(() => {
-    switch (themeContext) {
-      case "dark":
-        return NavDarkTheme
-      default:
-        return NavDefaultTheme
-    }
+    return NavDefaultTheme
+    // Original code (commented for future use):
+    // switch (themeContext) {
+    //   case "dark":
+    //     return NavDarkTheme
+    //   default:
+    //     return NavDefaultTheme
+    // }
   }, [themeContext])
 
+  // Force light theme for app (dark mode disabled)
   const theme: Theme = useMemo(() => {
-    switch (themeContext) {
-      case "dark":
-        return darkTheme
-      default:
-        return lightTheme
-    }
+    return lightTheme
+    // Original code (commented for future use):
+    // switch (themeContext) {
+    //   case "dark":
+    //     return darkTheme
+    //   default:
+    //     return lightTheme
+    // }
   }, [themeContext])
 
   useEffect(() => {

@@ -5,10 +5,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { Icon } from "@/components/Icon"
 import { EpisodeProvider } from "@/context/EpisodeContext"
 import { translate } from "@/i18n/translate"
-import { DemoCommunityScreen } from "@/screens/DemoCommunityScreen"
-import { DemoDebugScreen } from "@/screens/DemoDebugScreen"
-import { DemoPodcastListScreen } from "@/screens/DemoPodcastListScreen"
-import { DemoShowroomScreen } from "@/screens/DemoShowroomScreen/DemoShowroomScreen"
+import { ChatScreen } from "@/screens/ChatScreen"
+import { RecipeListScreen } from "@/screens/RecipeListScreen"
+import { FavoritesScreen } from "@/screens/FavoritesScreen"
+import { ProfileScreen } from "@/screens/ProfileScreen"
+import { HomeScreen } from "@/screens/HomeScreen"
 import type { ThemedStyle } from "@/theme/types"
 import { useAppTheme } from "@/theme/context"
 
@@ -36,65 +37,76 @@ export function DemoNavigator() {
         screenOptions={{
           headerShown: false,
           tabBarHideOnKeyboard: true,
-          tabBarStyle: themed([$tabBar, { height: bottom + 70 }]),
+          tabBarStyle: themed([$tabBar, { height: bottom + 60 }]),
           tabBarActiveTintColor: colors.text,
           tabBarInactiveTintColor: colors.text,
           tabBarLabelStyle: themed($tabBarLabel),
           tabBarItemStyle: themed($tabBarItem),
         }}
       >
+
+
         <Tab.Screen
-          name="DemoShowroom"
-          component={DemoShowroomScreen}
+          name="Home"
+          component={HomeScreen}
           options={{
-            tabBarLabel: translate("demoNavigator:componentsTab"),
+            tabBarLabel: "Home",
             tabBarIcon: ({ focused }) => (
               <Icon
-                icon="components"
+                icon={focused ? "home" : "homeOutline"}
                 color={focused ? colors.tint : colors.tintInactive}
-                size={30}
+                size={24}
               />
             ),
           }}
         />
 
         <Tab.Screen
-          name="DemoCommunity"
-          component={DemoCommunityScreen}
+          name="Recipes"
+          component={RecipeListScreen} // Reuse for now, ideally separate logic
           options={{
-            tabBarLabel: translate("demoNavigator:communityTab"),
+            tabBarLabel: "Recipes",
             tabBarIcon: ({ focused }) => (
               <Icon
-                icon="community"
+                icon={focused ? "restaurant" : "restaurantOutline"}
                 color={focused ? colors.tint : colors.tintInactive}
-                size={30}
+                size={24}
               />
             ),
           }}
         />
 
         <Tab.Screen
-          name="DemoPodcastList"
-          component={DemoPodcastListScreen}
+          name="Chat"
+          component={ChatScreen}
           options={{
-            tabBarAccessibilityLabel: translate("demoNavigator:podcastListTab"),
-            tabBarLabel: translate("demoNavigator:podcastListTab"),
+            tabBarLabel: "Chat",
             tabBarIcon: ({ focused }) => (
-              <Icon icon="podcast" color={focused ? colors.tint : colors.tintInactive} size={30} />
+              <Icon
+                icon={focused ? "chatFilled" : "chat"}
+                color={focused ? colors.tint : colors.tintInactive}
+                size={24}
+              />
             ),
           }}
         />
 
         <Tab.Screen
-          name="DemoDebug"
-          component={DemoDebugScreen}
+          name="Profile"
+          component={ProfileScreen}
           options={{
-            tabBarLabel: translate("demoNavigator:debugTab"),
+            tabBarLabel: "Profile",
             tabBarIcon: ({ focused }) => (
-              <Icon icon="debug" color={focused ? colors.tint : colors.tintInactive} size={30} />
+              <Icon
+                icon={focused ? "person" : "personOutline"}
+                color={focused ? colors.tint : colors.tintInactive}
+                size={24}
+              />
             ),
           }}
         />
+
+
       </Tab.Navigator>
     </EpisodeProvider>
   )
@@ -106,7 +118,7 @@ const $tabBar: ThemedStyle<ViewStyle> = ({ colors }) => ({
 })
 
 const $tabBarItem: ThemedStyle<ViewStyle> = ({ spacing }) => ({
-  paddingTop: spacing.md,
+  paddingTop: spacing.xs,
 })
 
 const $tabBarLabel: ThemedStyle<TextStyle> = ({ colors, typography }) => ({

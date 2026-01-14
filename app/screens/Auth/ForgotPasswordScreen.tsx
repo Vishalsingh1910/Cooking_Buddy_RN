@@ -11,7 +11,7 @@ import { useAuth } from "@/context/AuthContext"
 import type { AppStackScreenProps } from "@/navigators/navigationTypes"
 import type { ThemedStyle } from "@/theme/types"
 
-interface ForgotPasswordProps extends AppStackScreenProps<"ForgotPassword"> {}
+interface ForgotPasswordProps extends AppStackScreenProps<"ForgotPassword"> { }
 
 export const ForgotPasswordScreen: FC<ForgotPasswordProps> = ({ navigation }) => {
   const emailRef = useRef<TextInput>(null)
@@ -32,19 +32,16 @@ export const ForgotPasswordScreen: FC<ForgotPasswordProps> = ({ navigation }) =>
     setIsLoading(true)
     try {
       // If your auth context exposes a real function, use it:
-      if (typeof auth?.sendPasswordResetEmail === "function") {
-        const result = await auth.sendPasswordResetEmail(email)
-        // expect result to have isSuccess / error similar to your Flutter service
-        if (result?.isSuccess) {
-          navigation.replace("ResetPasswordSuccess", { email })
-        } else {
-          Alert.alert("Failed", result?.error ?? "Failed to send reset email")
-        }
+      // Fallback/mock — replace with your real API call
+      // await new Promise((res) => setTimeout(res, 900))
+
+      const { error } = await import("@/services/supabase/supabase").then(m => m.supabase.auth.resetPasswordForEmail(email))
+
+      if (error) {
+        Alert.alert("Failed", error.message)
       } else {
-        // Fallback/mock — replace with your real API call
-        await new Promise((res) => setTimeout(res, 900))
-        // simulate success:
-        navigation.replace("ResetPasswordSuccess", { email })
+        Alert.alert("Success", "Check your email for the reset link")
+        navigation.goBack()
       }
     } catch (err) {
       Alert.alert("Failed", String(err))
@@ -125,120 +122,120 @@ export const ForgotPasswordScreen: FC<ForgotPasswordProps> = ({ navigation }) =>
 
 /* Styles */
 const $screenContent: ThemedStyle<ViewStyle> = ({ spacing }: any) =>
-  ({
-    padding: spacing.lg,
-    alignItems: "center",
-  } as ViewStyle)
+({
+  padding: spacing.lg,
+  alignItems: "center",
+} as ViewStyle)
 
 const $appBar = ({ spacing }: any) =>
-  ({
-    width: "100%",
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: spacing.md,
-  } as ViewStyle)
+({
+  width: "100%",
+  flexDirection: "row",
+  alignItems: "center",
+  marginBottom: spacing.md,
+} as ViewStyle)
 
 const $backButton = ({ spacing }: any) =>
-  ({
-    padding: spacing.xs,
-    marginLeft: -8,
-  } as ViewStyle)
+({
+  padding: spacing.xs,
+  marginLeft: -8,
+} as ViewStyle)
 
 const $appBarTitle = ({ spacing }: any) =>
-  ({
-    marginLeft: spacing.md,
-    fontWeight: "600",
-  } as TextStyle)
+({
+  marginLeft: spacing.md,
+  fontWeight: "600",
+} as TextStyle)
 
 const $iconBox = ({ colors }: any) =>
-  ({
-    width: 80,
-    height: 80,
-    borderRadius: 20,
-    backgroundColor: colors.palette.appPrimary + "10", // subtle tint; adjust if your theme helper differs
-    alignItems: "center",
-    justifyContent: "center",
-  } as ViewStyle)
+({
+  width: 80,
+  height: 80,
+  borderRadius: 20,
+  backgroundColor: colors.palette.appPrimary + "10", // subtle tint; adjust if your theme helper differs
+  alignItems: "center",
+  justifyContent: "center",
+} as ViewStyle)
 
 const $spacer = ({ spacing }: any) =>
-  ({
-    height: 24,
-  } as ViewStyle)
+({
+  height: 24,
+} as ViewStyle)
 
 const $authCard = ({ colors, spacing }: any) =>
-  ({
-    width: "100%",
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: spacing.lg,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 3,
-  } as ViewStyle)
+({
+  width: "100%",
+  backgroundColor: colors.surface,
+  borderRadius: 12,
+  padding: spacing.lg,
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 6 },
+  shadowOpacity: 0.06,
+  shadowRadius: 12,
+  elevation: 3,
+} as ViewStyle)
 
 const $cardTitle = ({ spacing }: any) =>
-  ({
-    fontSize: 18,
-    fontWeight: "600",
-    marginBottom: spacing.md,
-  } as TextStyle)
+({
+  fontSize: 18,
+  fontWeight: "600",
+  marginBottom: spacing.md,
+} as TextStyle)
 
 const $cardBody = ({ spacing, colors }: any) =>
-  ({
-    color: colors.palette.neutral600,
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: spacing.lg,
-  } as TextStyle)
+({
+  color: colors.palette.neutral600,
+  fontSize: 14,
+  lineHeight: 20,
+  marginBottom: spacing.lg,
+} as TextStyle)
 
-const $form = ({}: any) =>
-  ({
-    width: "100%",
-  } as ViewStyle)
+const $form = ({ }: any) =>
+({
+  width: "100%",
+} as ViewStyle)
 
 const $textField = ({ spacing }: any) =>
-  ({
-    marginBottom: spacing.md,
-  } as ViewStyle)
+({
+  marginBottom: spacing.md,
+} as ViewStyle)
 
 const $sendButtonWrapper = ({ spacing }: any) =>
-  ({
-    marginTop: spacing.sm,
-  } as ViewStyle)
+({
+  marginTop: spacing.sm,
+} as ViewStyle)
 
 const $sendButton = ({ colors }: any) =>
-  ({
-    backgroundColor: colors.palette.appPrimary,
-    borderRadius: 25,
-    paddingVertical: 14,
-    alignItems: "center",
-    justifyContent: "center",
-  } as ViewStyle)
+({
+  backgroundColor: colors.palette.appPrimary,
+  borderRadius: 25,
+  paddingVertical: 14,
+  alignItems: "center",
+  justifyContent: "center",
+} as ViewStyle)
 
-const $sendButtonText = ({}: any) =>
-  ({
-    fontSize: 16,
-    fontWeight: "600",
-    color: undefined,
-  } as TextStyle)
+const $sendButtonText = ({ }: any) =>
+({
+  fontSize: 16,
+  fontWeight: "600",
+  color: undefined,
+} as TextStyle)
 
 const $bottomRow = ({ spacing }: any) =>
-  ({
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 32,
-  } as ViewStyle)
+({
+  flexDirection: "row",
+  alignItems: "center",
+  marginTop: 32,
+} as ViewStyle)
 
 const $rememberText = ({ colors }: any) =>
-  ({
-    color: colors.palette.neutral600,
-    marginRight: 6,
-  } as TextStyle)
+({
+  color: colors.palette.neutral600,
+  marginRight: 6,
+} as TextStyle)
 
 const $backToLogin = ({ colors }: any) =>
-  ({
-    color: colors.palette.appPrimary,
-    fontWeight: "600",
-  } as TextStyle)
+({
+  color: colors.palette.appPrimary,
+  fontWeight: "600",
+} as TextStyle)
