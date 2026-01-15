@@ -1,4 +1,4 @@
-import React, { FC, useMemo, useRef, useState } from "react"
+import React, { FC, useRef, useState } from "react"
 import {
   ActivityIndicator,
   Alert,
@@ -7,6 +7,7 @@ import {
   View,
   ViewStyle,
   TextStyle,
+  Keyboard,
 } from "react-native"
 
 import { Button } from "@/components/Button"
@@ -14,7 +15,6 @@ import { PressableIcon } from "@/components/Icon"
 import { Screen } from "@/components/Screen"
 import { Text } from "@/components/Text"
 import { TextField, type TextFieldAccessoryProps } from "@/components/TextField"
-import { useAuth } from "@/context/AuthContext"
 import type { AppStackScreenProps } from "@/navigators/navigationTypes"
 import { useAppTheme } from "@/theme/context"
 import { supabase } from "@/services/supabase/supabase"
@@ -22,70 +22,63 @@ import { supabase } from "@/services/supabase/supabase"
 interface SignupScreenProps extends AppStackScreenProps<"SignUp"> { }
 
 export const SignupScreen: FC<SignupScreenProps> = ({ navigation }) => {
-  const nameRef = useRef<TextInput>(null)
   const emailRef = useRef<TextInput>(null)
   const passwordRef = useRef<TextInput>(null)
 
   const { themed, theme } = useAppTheme()
-  // const { setAuthToken } = useAuth()
 
-  const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isPasswordHidden, setIsPasswordHidden] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
 
-  const nameError = isSubmitted && name.trim().length < 2 ? "Name must be at least 2 characters" : ""
   const emailError =
-    isSubmitted && !/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email.trim()) ? "Please enter a valid email" : ""
-  const passwordError = isSubmitted && password.length < 6 ? "Password must be at least 6 characters" : ""
+    isSubmitted && !/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email.trim())
+      ? "Please enter a valid email address"
+      : ""
+  const passwordError =
+    isSubmitted && password.length < 6
+      ? "Password must be at least 6 characters"
+      : ""
 
   async function signup() {
+    Keyboard.dismiss()
     setIsSubmitted(true)
-    if (nameError || emailError || passwordError) return
+
+    if (emailError || passwordError) return
 
     setIsLoading(true)
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: email.trim(),
         password: password,
-        options: {
-          data: {
-            full_name: name,
-          },
-        },
       })
 
       if (error) {
-        Alert.alert("Signup failed", error.message)
+        Alert.alert("Signup Failed", error.message)
         return
       }
 
-      Alert.alert("Success", "Please check your email to confirm your account.")
+      // Success! The database trigger will automatically create the user profile
+      Alert.alert(
+        "Success! 🎉",
+        "Please check your email to verify your account. Once verified, you can log in and start cooking!",
+        [
+          {
+            text: "OK",
+            onPress: () => navigation.replace("Login"),
+          },
+        ]
+      )
     } catch (e) {
-      Alert.alert("Signup failed", String(e))
+      Alert.alert("Signup Failed", String(e))
     } finally {
       setIsLoading(false)
     }
   }
 
-  async function signInWithGoogle() {
-    setIsGoogleLoading(true)
-    try {
-      // replace with real google sign-in
-      // await new Promise((res) => setTimeout(res, 900))
-      // setAuthToken("google:" + String(Date.now()))
-      Alert.alert("Not implemented", "Google Sign-In needs native setup")
-    } catch (e) {
-      Alert.alert("Google sign-in failed", String(e))
-    } finally {
-      setIsGoogleLoading(false)
-    }
-  }
-
-  const PasswordRightAccessory = useMemo(
+  const PasswordRightAccessory = React.useMemo(
     () =>
       function PasswordRightAccessory(props: TextFieldAccessoryProps) {
         return (
@@ -104,109 +97,117 @@ export const SignupScreen: FC<SignupScreenProps> = ({ navigation }) => {
   )
 
   return (
-    <Screen preset="auto" contentContainerStyle={themed($screenContentContainer)} safeAreaEdges={["top", "bottom"]}>
-      {/* AppBar back button similar to Flutter's AppBar */}
-      <View style={themed($appBar)}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={themed($backButton)}>
-          <PressableIcon icon="caretLeft" size={24} color={theme.colors.palette.neutral800} />
+    <Screen
+      preset="auto"
+      contentContainerStyle={themed($screenContentContainer)}
+      safeAreaEdges={["top", "bottom"]}
+    >
+      {/* Back Button */}
+      <View style={themed($header)}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={themed($backButton)}
+          activeOpacity={0.7}
+        >
+          <PressableIcon icon="caretLeft" size={24} color={theme.colors.text} />
         </TouchableOpacity>
       </View>
 
       {/* Logo */}
-      <View style={themed($logoBox)}>
-        <PressableIcon icon="chef" size={40} color="#fff" />
+      <View style={themed($logoContainer)}>
+        <View style={themed($logoBox)}>
+          <PressableIcon icon="chef" size={48} color="#fff" />
+        </View>
+        <Text preset="heading" style={themed($appName)}>
+          Cooking Buddy
+        </Text>
       </View>
 
-      <View style={themed($spacer)} />
-
-      {/* Auth Card */}
-      <View style={themed($authCard)}>
-        <Text preset="heading" style={themed($authTitle)}>
+      {/* Title */}
+      <View style={themed($titleContainer)}>
+        <Text preset="heading" style={themed($title)}>
           Create Account
         </Text>
-
-        <View style={themed($form)}>
-          <TextField
-            ref={nameRef}
-            value={name}
-            onChangeText={setName}
-            containerStyle={themed($textField)}
-            autoCapitalize="words"
-            autoCorrect={false}
-            labelTx={undefined}
-            placeholder="Full Name"
-            helper={nameError}
-            status={nameError ? "error" : undefined}
-            onSubmitEditing={() => emailRef.current?.focus()}
-            LeftAccessory={() => <PressableIcon icon="components" size={18} color={theme.colors.palette.neutral600} />}
-          />
-
-          <TextField
-            ref={emailRef}
-            value={email}
-            onChangeText={setEmail}
-            containerStyle={themed($textField)}
-            autoCapitalize="none"
-            autoComplete="email"
-            autoCorrect={false}
-            keyboardType="email-address"
-            labelTx={undefined}
-            placeholder="Email"
-            helper={emailError}
-            status={emailError ? "error" : undefined}
-            onSubmitEditing={() => passwordRef.current?.focus()}
-            LeftAccessory={() => <PressableIcon icon="github" size={18} color={theme.colors.palette.neutral600} />}
-          />
-
-          <TextField
-            ref={passwordRef}
-            value={password}
-            onChangeText={setPassword}
-            containerStyle={themed($textField)}
-            autoCapitalize="none"
-            autoComplete="password"
-            autoCorrect={false}
-            secureTextEntry={isPasswordHidden}
-            labelTx={undefined}
-            placeholder="Password"
-            helper={passwordError}
-            status={passwordError ? "error" : undefined}
-            onSubmitEditing={signup}
-            RightAccessory={PasswordRightAccessory}
-            LeftAccessory={() => <PressableIcon icon="lock" size={18} color={theme.colors.palette.neutral600} />}
-          />
-
-          <View style={themed($signupButtonWrapper)}>
-            <Button
-              testID="signup-button"
-              onPress={signup}
-              style={themed($signupButton)}
-              disabled={isLoading}
-            >
-              {isLoading ? <ActivityIndicator color={theme.colors.palette.accent100} /> : <Text style={themed($signupButtonText)}>Sign Up</Text>}
-            </Button>
-          </View>
-        </View>
+        <Text style={themed($subtitle)}>
+          Join our community of food lovers
+        </Text>
       </View>
 
-      {/* Divider */}
-      <View style={themed($dividerRow)}>
-        <View style={themed($dividerLine)} />
-        <Text style={themed($dividerText)}>or continue with</Text>
-        <View style={themed($dividerLine)} />
-      </View>
+      {/* Form */}
+      <View style={themed($form)}>
+        <TextField
+          ref={emailRef}
+          value={email}
+          onChangeText={setEmail}
+          containerStyle={themed($textField)}
+          autoCapitalize="none"
+          autoComplete="email"
+          autoCorrect={false}
+          keyboardType="email-address"
+          labelTx={undefined}
+          placeholder="Email address"
+          helper={emailError}
+          status={emailError ? "error" : undefined}
+          onSubmitEditing={() => passwordRef.current?.focus()}
+          LeftAccessory={() => (
+            <PressableIcon
+              icon="community"
+              size={20}
+              color={theme.colors.palette.neutral600}
+            />
+          )}
+        />
 
-      {/* Social login */}
-      <TouchableOpacity style={themed($socialButton)} onPress={signInWithGoogle} disabled={isGoogleLoading}>
-        <PressableIcon icon="github" size={20} color={theme.colors.palette.neutral800} containerStyle={themed($socialIcon)} />
-        {isGoogleLoading ? <ActivityIndicator style={themed($socialLoader)} /> : <Text style={themed($socialText)}>Continue with Google</Text>}
-      </TouchableOpacity>
+        <TextField
+          ref={passwordRef}
+          value={password}
+          onChangeText={setPassword}
+          containerStyle={themed($textField)}
+          autoCapitalize="none"
+          autoComplete="password"
+          autoCorrect={false}
+          secureTextEntry={isPasswordHidden}
+          labelTx={undefined}
+          placeholder="Password (min. 6 characters)"
+          helper={passwordError}
+          status={passwordError ? "error" : undefined}
+          onSubmitEditing={signup}
+          RightAccessory={PasswordRightAccessory}
+          LeftAccessory={() => (
+            <PressableIcon
+              icon="lock"
+              size={20}
+              color={theme.colors.palette.neutral600}
+            />
+          )}
+        />
+
+        <Button
+          testID="signup-button"
+          onPress={signup}
+          style={themed($signupButton)}
+          pressedStyle={themed($signupButtonPressed)}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={themed($signupButtonText)}>Create Account</Text>
+          )}
+        </Button>
+
+        <Text style={themed($termsText)}>
+          By signing up, you agree to our{" "}
+          <Text style={themed($termsLink)}>Terms of Service</Text> and{" "}
+          <Text style={themed($termsLink)}>Privacy Policy</Text>
+        </Text>
+      </View>
 
       {/* Login link */}
       <View style={themed($loginRow)}>
-        <Text style={themed($noAccount)}>Already have an account?</Text>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={themed($loginLink)}>Login</Text>
+        <Text style={themed($loginText)}>Already have an account? </Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
+          <Text style={themed($loginLink)}>Log In</Text>
         </TouchableOpacity>
       </View>
     </Screen>
@@ -216,154 +217,148 @@ export const SignupScreen: FC<SignupScreenProps> = ({ navigation }) => {
 /* Styles */
 const $screenContentContainer = ({ spacing }: any) =>
 ({
-  padding: spacing.lg,
-  alignItems: "center",
+  paddingHorizontal: spacing.lg,
+  paddingBottom: spacing.xl,
 } as ViewStyle)
 
-const $appBar = ({ }: any) =>
+const $header = ({ spacing }: any) =>
 ({
   width: "100%",
-  paddingTop: 0,
-  paddingBottom: 0,
+  paddingTop: spacing.xs,
+  paddingBottom: spacing.md,
 } as ViewStyle)
 
 const $backButton = ({ spacing }: any) =>
 ({
   padding: spacing.xs,
   marginLeft: -8,
+  width: 40,
+  height: 40,
+  justifyContent: "center",
+  alignItems: "center",
 } as ViewStyle)
 
-const $logoBox = ({ colors }: any) =>
+const $logoContainer = ({ spacing }: any) =>
 ({
-  width: 80,
-  height: 80,
-  borderRadius: 20,
-  backgroundColor: colors.palette.secondary,
+  alignItems: "center",
+  marginTop: spacing.md,
+  marginBottom: spacing.xl,
+} as ViewStyle)
+
+const $logoBox = ({ colors, spacing }: any) =>
+({
+  width: 100,
+  height: 100,
+  borderRadius: 24,
+  backgroundColor: colors.palette.appPrimary,
   alignItems: "center",
   justifyContent: "center",
-} as ViewStyle)
-
-const $spacer = ({ spacing }: any) =>
-({
-  height: 24,
-} as ViewStyle)
-
-const $authCard = ({ colors, spacing }: any) =>
-({
-  width: "100%",
-  backgroundColor: colors.surface,
-  borderRadius: 12,
-  padding: spacing.lg,
-  shadowColor: "#000",
-  shadowOffset: { width: 0, height: 6 },
-  shadowOpacity: 0.06,
-  shadowRadius: 12,
-  elevation: 3,
-} as ViewStyle)
-
-const $authTitle = ({ spacing }: any) =>
-({
-  textAlign: "center",
   marginBottom: spacing.md,
+  shadowColor: colors.palette.appPrimary,
+  shadowOffset: { width: 0, height: 8 },
+  shadowOpacity: 0.3,
+  shadowRadius: 16,
+  elevation: 8,
+} as ViewStyle)
+
+const $appName = ({ spacing }: any) =>
+({
+  fontSize: 24,
+  fontWeight: "700",
+  textAlign: "center",
 } as TextStyle)
 
-const $form = ({ }: any) =>
+const $titleContainer = ({ spacing }: any) =>
+({
+  alignItems: "center",
+  marginBottom: spacing.xl,
+} as ViewStyle)
+
+const $title = ({ }: any) =>
+({
+  fontSize: 32,
+  fontWeight: "700",
+  textAlign: "center",
+  marginBottom: 8,
+} as TextStyle)
+
+const $subtitle = ({ colors }: any) =>
+({
+  fontSize: 16,
+  textAlign: "center",
+  color: colors.palette.neutral600,
+} as TextStyle)
+
+const $form = ({ spacing }: any) =>
 ({
   width: "100%",
+  marginBottom: spacing.lg,
 } as ViewStyle)
 
 const $textField = ({ spacing }: any) =>
 ({
-  marginBottom: spacing.md,
+  marginBottom: spacing.lg,
 } as ViewStyle)
 
-const $signupButtonWrapper = ({ spacing }: any) =>
+const $signupButton = ({ colors, spacing }: any) =>
 ({
-  marginTop: spacing.sm,
-} as ViewStyle)
-
-const $signupButton = ({ colors }: any) =>
-({
-  borderRadius: 25,
+  borderRadius: 16,
   backgroundColor: colors.palette.appPrimary,
-  paddingVertical: 14,
-  alignItems: "center",
-  justifyContent: "center",
+  paddingVertical: 16,
+  marginTop: spacing.md,
+  marginBottom: spacing.md,
+  shadowColor: colors.palette.appPrimary,
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.3,
+  shadowRadius: 8,
+  elevation: 4,
+} as ViewStyle)
+
+const $signupButtonPressed = ({ colors }: any) =>
+({
+  backgroundColor: colors.palette.appPrimary,
+  opacity: 0.8,
 } as ViewStyle)
 
 const $signupButtonText = ({ }: any) =>
 ({
-  fontSize: 16,
+  fontSize: 18,
   fontWeight: "600",
-  color: undefined, // Button will set text color; you can force theme color if needed
+  color: "#fff",
 } as TextStyle)
 
-const $dividerRow = ({ spacing }: any) =>
+const $termsText = ({ colors, spacing }: any) =>
 ({
-  flexDirection: "row",
-  alignItems: "center",
-  marginTop: spacing.lg,
-  width: "100%",
-} as ViewStyle)
-
-const $dividerLine = ({ colors }: any) =>
-({
-  flex: 1,
-  height: 1,
-  backgroundColor: colors.palette.neutral300,
-} as ViewStyle)
-
-const $dividerText = ({ spacing, colors }: any) =>
-({
-  marginHorizontal: spacing.md,
+  fontSize: 12,
+  textAlign: "center",
   color: colors.palette.neutral500,
+  lineHeight: 18,
+  paddingHorizontal: spacing.md,
 } as TextStyle)
 
-const $socialButton = ({ colors, spacing }: any) =>
+const $termsLink = ({ colors }: any) =>
 ({
-  marginTop: 16,
-  width: "100%",
-  backgroundColor: colors.palette.neutral0,
-  borderRadius: 8,
-  paddingVertical: 12,
-  alignItems: "center",
-  justifyContent: "center",
-  flexDirection: "row",
-  borderWidth: 1,
-  borderColor: colors.palette.neutral200,
-} as ViewStyle)
-
-const $socialIcon = ({ spacing }: any) =>
-({
-  marginRight: spacing.md,
-} as ViewStyle)
-
-const $socialText = ({ colors }: any) =>
-({
-  color: colors.textPrimary,
-  fontWeight: "500",
+  color: colors.palette.appPrimary,
+  fontWeight: "600",
 } as TextStyle)
-
-const $socialLoader = ({ spacing }: any) =>
-({
-  marginLeft: spacing.md,
-} as ViewStyle)
 
 const $loginRow = ({ spacing }: any) =>
 ({
   flexDirection: "row",
   alignItems: "center",
-  marginTop: 24,
+  justifyContent: "center",
+  marginTop: spacing.lg,
 } as ViewStyle)
 
-const $noAccount = ({ colors }: any) =>
+const $loginText = ({ colors }: any) =>
 ({
+  fontSize: 15,
   color: colors.palette.neutral600,
-  marginRight: 6,
 } as TextStyle)
 
 const $loginLink = ({ colors }: any) =>
 ({
+  fontSize: 15,
   color: colors.palette.appPrimary,
-  fontWeight: "600",
+  fontWeight: "700",
 } as TextStyle)

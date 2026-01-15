@@ -45,12 +45,10 @@ const config = {
     Welcome: "welcome",
     Demo: {
       screens: {
-        DemoShowroom: {
-          path: "showroom/:queryIndex?/:itemIndex?",
-        },
-        DemoDebug: "debug",
-        DemoPodcastList: "podcast",
-        DemoCommunity: "community",
+        Home: "home",
+        Recipes: "recipes",
+        Chat: "chat",
+        Profile: "profile",
       },
     },
   },

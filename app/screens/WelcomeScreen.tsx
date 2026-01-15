@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Dimensions,
 } from "react-native"
+import LottieView from "lottie-react-native"
 
 import { Button } from "@/components/Button"
 import { Screen } from "@/components/Screen"
@@ -15,7 +16,6 @@ import { Text } from "@/components/Text"
 import type { AppStackScreenProps } from "@/navigators/navigationTypes"
 import { useAppTheme } from "@/theme/context"
 import { useSafeAreaInsetsStyle } from "@/utils/useSafeAreaInsetsStyle"
-import { Icon, IconTypes } from "@/components/Icon"
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window")
 
@@ -23,35 +23,35 @@ interface WelcomOnboardingItemData {
   key: string
   title: string
   subtitle: string
-  iconName: IconTypes
+  animation: any
   colorKey?: string
 }
 
 const DATA: WelcomOnboardingItemData[] = [
   {
     key: "1",
-    title: "Discover delicious recipes",
-    subtitle: "Find recipes tailored to your taste and ingredients you have.",
-    iconName: "chef",
+    title: "Discover Your Next Favorite Meal",
+    subtitle: "Browse thousands of recipes from around the world, all in one place. Find exactly what you're craving.",
+    animation: require("../../assets/lottie/cooking.json"),
     colorKey: "primary",
   },
   {
     key: "2",
-    title: "Smart recipe suggestions",
-    subtitle: "Generate recipes, customize them and save for later.",
-    iconName: "robot",
+    title: "Your Personal AI Chef",
+    subtitle: "Get smart recipe suggestions based on ingredients you already have at home. Never waste food again!",
+    animation: require("../../assets/lottie/ai-chef.json"),
     colorKey: "secondary",
   },
   {
     key: "3",
-    title: "Share & Connect",
-    subtitle: "Share with friends and explore community creations.",
-    iconName: "users",
+    title: "Cook, Share, Connect",
+    subtitle: "Save your favorites, share your creations, and get inspired by a community of food lovers.",
+    animation: require("../../assets/lottie/community.json"),
     colorKey: "primary",
   },
 ]
 
-interface WelcomeScreenProps extends AppStackScreenProps<"Welcome"> {}
+interface WelcomeScreenProps extends AppStackScreenProps<"Welcome"> { }
 
 export const WelcomeScreen: FC<WelcomeScreenProps> = function WelcomeScreen(
   props,
@@ -83,10 +83,11 @@ export const WelcomeScreen: FC<WelcomeScreenProps> = function WelcomeScreen(
     return (
       <View style={themed([$styles.pageContainer])}>
         <View style={themed($styles.illustrationContainer)}>
-          <Icon
-            icon={item.iconName}
-            size={80}
-            color={theme.colors.palette.accent100}
+          <LottieView
+            source={item.animation}
+            autoPlay
+            loop
+            style={$styles.lottie}
           />
         </View>
 
@@ -104,6 +105,15 @@ export const WelcomeScreen: FC<WelcomeScreenProps> = function WelcomeScreen(
   return (
     <Screen preset="fixed" contentContainerStyle={$styles.flex1}>
       <View style={themed($styles.container)}>
+        {/* Skip Button */}
+        <TouchableOpacity
+          style={themed($styles.skipButton)}
+          onPress={() => navigation.replace("Login")}
+          activeOpacity={0.7}
+        >
+          <Text style={themed($styles.skipText)}>Skip</Text>
+        </TouchableOpacity>
+
         <FlatList
           data={DATA}
           horizontal
@@ -151,96 +161,117 @@ export const WelcomeScreen: FC<WelcomeScreenProps> = function WelcomeScreen(
 const $styles = {
   flex1: { flex: 1 } as ViewStyle,
   container: ({ colors }: any) =>
-    ({
-      flex: 1,
-      backgroundColor: colors.background,
-    } as ViewStyle),
+  ({
+    flex: 1,
+    backgroundColor: colors.background,
+  } as ViewStyle),
+  skipButton: ({ spacing }: any) =>
+  ({
+    position: "absolute",
+    top: spacing.xl,
+    right: spacing.lg,
+    zIndex: 10,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+  } as ViewStyle),
+  skipText: ({ colors }: any) =>
+  ({
+    fontSize: 16,
+    fontWeight: "600",
+    color: colors.palette.neutral600,
+  } as TextStyle),
   pageContainer: ({ spacing }: any) =>
-    ({
-      width: SCREEN_WIDTH,
-      paddingHorizontal: spacing.lg,
-      justifyContent: "center",
-      alignItems: "center",
-      paddingTop: spacing.xl,
-      paddingBottom: spacing.xl,
-    } as ViewStyle),
+  ({
+    width: SCREEN_WIDTH,
+    paddingHorizontal: spacing.lg,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.xl,
+  } as ViewStyle),
   illustrationContainer: ({ spacing, colors }: any) =>
-    ({
-      width: 200,
-      height: 200,
-      borderRadius: 120,
-      justifyContent: "center",
-      alignItems: "center",
-      backgroundColor: colors.palette.appPrimary,
-      marginBottom: spacing.xl,
-    } as ViewStyle),
+  ({
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: colors.palette.appPrimary + "20",
+    marginBottom: spacing.xl,
+    overflow: "hidden",
+  } as ViewStyle),
+  lottie: {
+    width: 200,
+    height: 200,
+  } as ViewStyle,
   title: ({ spacing }: any) =>
-    ({
-      fontSize: 28,
-      fontWeight: "700",
-      marginTop: spacing.lg,
-      marginBottom: spacing.md,
-      textAlign: "center",
-    } as TextStyle),
+  ({
+    fontSize: 28,
+    fontWeight: "700",
+    marginTop: spacing.lg,
+    marginBottom: spacing.md,
+    textAlign: "center",
+    paddingHorizontal: spacing.sm,
+  } as TextStyle),
   subtitle: ({ spacing, colors }: any) =>
-    ({
-      fontSize: 16,
-      textAlign: "center",
-      lineHeight: 24,
-      color: colors.palette.neutral600,
-      paddingHorizontal: spacing.md,
-    } as TextStyle),
+  ({
+    fontSize: 16,
+    textAlign: "center",
+    lineHeight: 24,
+    color: colors.palette.neutral600,
+    paddingHorizontal: spacing.lg,
+  } as TextStyle),
 
   bottomPanel: ({ colors, spacing }: any) =>
-    ({
-      backgroundColor: colors.surface,
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.md,
-      paddingBottom: spacing.lg,
-      borderTopLeftRadius: 16,
-      borderTopRightRadius: 16,
-    } as ViewStyle),
+  ({
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.lg,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+  } as ViewStyle),
 
   indicatorsRow: ({ spacing }: any) =>
-    ({
-      flexDirection: "row",
-      justifyContent: "center",
-      alignItems: "center",
-      marginBottom: spacing.lg,
-    } as ViewStyle),
+  ({
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: spacing.lg,
+  } as ViewStyle),
 
   indicator: ({ spacing, colors }: any) =>
-    ({
-      width: spacing.xs,
-      height: spacing.xs,
-      borderRadius: 4,
-      backgroundColor: colors.palette.neutral400,
-      marginHorizontal: spacing.xxs,
-    } as ViewStyle),
+  ({
+    width: spacing.xs,
+    height: spacing.xs,
+    borderRadius: 4,
+    backgroundColor: colors.palette.neutral400,
+    marginHorizontal: spacing.xxs,
+  } as ViewStyle),
 
   activeIndicator: ({ spacing, colors }: any) =>
-    ({
-      width: 24,
-      height: spacing.xs,
-      borderRadius: 4,
-      backgroundColor: colors.palette.appPrimary,
-      marginHorizontal: spacing.xxs,
-    } as ViewStyle),
+  ({
+    width: 24,
+    height: spacing.xs,
+    borderRadius: 4,
+    backgroundColor: colors.palette.appPrimary,
+    marginHorizontal: spacing.xxs,
+  } as ViewStyle),
 
   buttonWrapper: ({ spacing }: any) =>
-    ({
-      marginBottom: spacing.lg,
-    } as ViewStyle),
+  ({
+    marginBottom: spacing.lg,
+  } as ViewStyle),
 
   ctaButton: ({ colors }: any) =>
-    ({
-      borderRadius: 120,
-      backgroundColor: colors.palette.appPrimary,
-      borderWidth: 0,
-    } as ViewStyle),
+  ({
+    borderRadius: 120,
+    backgroundColor: colors.palette.appPrimary,
+    borderWidth: 0,
+  } as ViewStyle),
 
   buttonTextStyle: () =>
-    ({
-      fontSize: 20,
-    } as TextStyle),
+  ({
+    fontSize: 20,
+  } as TextStyle),
 }
