@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useMemo, useRef, useState } from "react"
+import React, { FC, useEffect, useRef, useState } from "react"
 import {
   ActivityIndicator,
   Alert,
@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ViewStyle,
   TextStyle,
+  Keyboard,
 } from "react-native"
 
 import { Button } from "@/components/Button"
@@ -18,45 +19,45 @@ import { useAuth } from "@/context/AuthContext"
 import type { AppStackScreenProps } from "@/navigators/navigationTypes"
 import { useAppTheme } from "@/theme/context"
 import { supabase } from "@/services/supabase/supabase"
-import GoogleSignInButton from "@/components/GoogleSignInButton"
 
 interface LoginScreenProps extends AppStackScreenProps<"Login"> { }
 
 export const LoginScreen: FC<LoginScreenProps> = ({ navigation }) => {
-  const authPasswordInput = useRef<TextInput>(null)
+  const passwordRef = useRef<TextInput>(null)
+  const emailRef = useRef<TextInput>(null)
 
-  const [authPassword, setAuthPassword] = useState("")
-  const [isAuthPasswordHidden, setIsAuthPasswordHidden] = useState(true)
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [isPasswordHidden, setIsPasswordHidden] = useState(true)
   const [isSubmitted, setIsSubmitted] = useState(false)
-  const [attemptsCount, setAttemptsCount] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false)
 
   const { checkUser } = useAuth()
   const { themed, theme } = useAppTheme()
-  const [authEmail, setAuthEmail] = useState("")
 
   const isSubmittingRef = useRef(false)
   const isMountedRef = useRef(true)
+
   useEffect(() => {
     return () => {
       isMountedRef.current = false
     }
   }, [])
 
-  const validationError = useMemo(() => {
-    if (!authEmail || authEmail.length === 0) return "can't be blank"
-    if (authEmail.length < 6) return "must be at least 6 characters"
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(authEmail)) return "must be a valid email address"
-    return ""
-  }, [authEmail])
-
-  const error = isSubmitted ? validationError : ""
+  const emailError =
+    isSubmitted && !/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email.trim())
+      ? "Please enter a valid email address"
+      : ""
+  const passwordError =
+    isSubmitted && password.length < 6
+      ? "Password must be at least 6 characters"
+      : ""
 
   async function login() {
+    Keyboard.dismiss()
     setIsSubmitted(true)
 
-    if (validationError) return
+    if (emailError || passwordError) return
 
     if (isSubmittingRef.current) return
     isSubmittingRef.current = true
@@ -64,161 +65,162 @@ export const LoginScreen: FC<LoginScreenProps> = ({ navigation }) => {
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: authEmail?.trim() ?? "",
-        password: authPassword ?? "",
+        email: email.trim(),
+        password: password,
       })
 
       if (error) {
-        // failed attempt
-        setAttemptsCount((c) => c + 1)
-        Alert.alert("Login failed", error.message ?? "Unable to sign in")
+        Alert.alert("Login Failed", error.message ?? "Unable to sign in")
         return
       }
 
       const session = data?.session
       if (!session) {
-        // defensive: no session returned
-        setAttemptsCount((c) => c + 1)
-        Alert.alert("Login failed", "No active session returned from Supabase.")
+        Alert.alert("Login Failed", "No active session returned from Supabase.")
         return
       }
 
-      // success: reset attempts, set auth token and navigate
-      // success: reset attempts, check user to update context
+      // Success - context listener will handle navigation
       if (isMountedRef.current) {
-        setAttemptsCount(0)
-        // Context listener will handle navigation
+        // Navigation handled by AuthContext
       }
     } catch (e) {
-      setIsLoading(false)
       console.error("Login exception:", e)
-      setAttemptsCount((c) => c + 1)
-      Alert.alert("Login failed", String(e))
+      Alert.alert("Login Failed", String(e))
     } finally {
-      setIsLoading(false)
       if (isMountedRef.current) setIsLoading(false)
       isSubmittingRef.current = false
     }
   }
 
-  async function signInWithGoogle() {
-    setIsGoogleLoading(true)
-    try {
-      // call your real google sign-in service
-      // await new Promise((res) => setTimeout(res, 900))
-      // setAuthToken("google:" + String(Date.now()))
-      Alert.alert("Not implemented", "Google Sign-In needs native setup")
-    } catch (e) {
-      Alert.alert("Google sign-in failed", String(e))
-    } finally {
-      setIsGoogleLoading(false)
-    }
-  }
-
-  const PasswordRightAccessory: React.ComponentType<TextFieldAccessoryProps> = useMemo(
+  const PasswordRightAccessory = React.useMemo(
     () =>
       function PasswordRightAccessory(props: TextFieldAccessoryProps) {
         return (
           <PressableIcon
-            icon={isAuthPasswordHidden ? "view" : "hidden"}
+            icon={isPasswordHidden ? "view" : "hidden"}
             color={theme.colors.palette.neutral800}
             containerStyle={props.style}
             size={20}
-            onPress={() => setIsAuthPasswordHidden((v) => !v)}
+            onPress={() => setIsPasswordHidden((v) => !v)}
             accessibilityRole="button"
             accessibilityLabel="Toggle password visibility"
           />
         )
       },
-    [isAuthPasswordHidden, theme.colors.palette.neutral800],
+    [isPasswordHidden, theme.colors.palette.neutral800],
   )
 
   return (
-    <Screen preset="auto" contentContainerStyle={themed($screenContentContainer)} safeAreaEdges={["top"]}>
-      <View style={themed($logoBox)}>
-        <PressableIcon icon="chef" size={40} color="#fff" />
+    <Screen
+      preset="auto"
+      contentContainerStyle={themed($screenContentContainer)}
+      safeAreaEdges={["top", "bottom"]}
+    >
+      {/* Logo */}
+      <View style={themed($logoContainer)}>
+        <View style={themed($logoBox)}>
+          <PressableIcon icon="chef" size={48} color="#fff" />
+        </View>
+        <Text preset="heading" style={themed($appName)}>
+          Cooking Buddy
+        </Text>
       </View>
 
-      <View style={themed($spacer)} />
-
-      <View style={themed($authCard)}>
-        <Text preset="heading" style={themed($authTitle)}>
+      {/* Title */}
+      <View style={themed($titleContainer)}>
+        <Text preset="heading" style={themed($title)}>
           Welcome Back
         </Text>
-
-        <View style={themed($form)}>
-          <TextField
-            value={authEmail}
-            onChangeText={setAuthEmail}
-            containerStyle={themed($textField)}
-            autoCapitalize="none"
-            autoComplete="email"
-            autoCorrect={false}
-            keyboardType="email-address"
-            labelTx="loginScreen:emailFieldLabel"
-            placeholderTx="loginScreen:emailFieldPlaceholder"
-            helper={error}
-            status={error ? "error" : undefined}
-            onSubmitEditing={() => authPasswordInput.current?.focus()}
-          />
-
-          <TextField
-            ref={authPasswordInput}
-            value={authPassword}
-            onChangeText={setAuthPassword}
-            containerStyle={themed($textField)}
-            autoCapitalize="none"
-            autoComplete="password"
-            autoCorrect={false}
-            secureTextEntry={isAuthPasswordHidden}
-            labelTx="loginScreen:passwordFieldLabel"
-            placeholderTx="loginScreen:passwordFieldPlaceholder"
-            onSubmitEditing={login}
-            RightAccessory={PasswordRightAccessory}
-          />
-
-          <View style={themed($loginButtonWrapper)}>
-            <Button
-              testID="login-button"
-              onPress={login}
-              style={themed($loginButton)}
-              disabled={isLoading}
-            // show loader on right using RightAccessory prop if your Button supports it
-            // fallback: if your Button doesn't support RightAccessory, show ActivityIndicator as children
-            >
-              {isLoading ? <ActivityIndicator color={theme.colors.palette.accent100} /> : <Text tx="loginScreen:logIn" preset="subheading" />}
-            </Button>
-
-            <TouchableOpacity onPress={() => navigation.navigate("ForgotPassword")} style={themed($forgotButton)}>
-              <Text tx="loginScreen:forgotPassword" style={themed($forgotText)} />
-            </TouchableOpacity>
-          </View>
-        </View>
+        <Text style={themed($subtitle)}>
+          Log in to continue cooking
+        </Text>
       </View>
 
-      {/* Divider with label */}
-      <View style={themed($dividerRow)}>
-        <View style={themed($dividerLine)} />
-        <Text style={themed($dividerText)}>or continue with</Text>
-        <View style={themed($dividerLine)} />
+      {/* Form */}
+      <View style={themed($form)}>
+        <TextField
+          ref={emailRef}
+          value={email}
+          onChangeText={setEmail}
+          containerStyle={themed($textField)}
+          autoCapitalize="none"
+          autoComplete="email"
+          autoCorrect={false}
+          keyboardType="email-address"
+          labelTx={undefined}
+          placeholder="Email address"
+          helper={emailError}
+          status={emailError ? "error" : undefined}
+          onSubmitEditing={() => passwordRef.current?.focus()}
+          LeftAccessory={(props) => (
+            <View style={props.style}>
+              <PressableIcon
+                icon="community"
+                size={20}
+                color={theme.colors.palette.neutral600}
+              />
+            </View>
+          )}
+        />
+
+        <TextField
+          ref={passwordRef}
+          value={password}
+          onChangeText={setPassword}
+          containerStyle={themed($textField)}
+          autoCapitalize="none"
+          autoComplete="password"
+          autoCorrect={false}
+          secureTextEntry={isPasswordHidden}
+          labelTx={undefined}
+          placeholder="Password"
+          helper={passwordError}
+          status={passwordError ? "error" : undefined}
+          onSubmitEditing={login}
+          RightAccessory={PasswordRightAccessory}
+          LeftAccessory={(props) => (
+            <View style={props.style}>
+              <PressableIcon
+                icon="lock"
+                size={20}
+                color={theme.colors.palette.neutral600}
+              />
+            </View>
+          )}
+        />
+
+        <TouchableOpacity
+          onPress={() => navigation.navigate("ForgotPassword")}
+          style={themed($forgotButton)}
+          activeOpacity={0.7}
+        >
+          <Text style={themed($forgotText)}>Forgot Password?</Text>
+        </TouchableOpacity>
+
+        <Button
+          testID="login-button"
+          onPress={login}
+          style={themed($loginButton)}
+          pressedStyle={themed($loginButtonPressed)}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={themed($loginButtonText)}>Log In</Text>
+          )}
+        </Button>
       </View>
 
-      {/* Social login */}
-      {/* <TouchableOpacity style={themed($socialButton)} onPress={signInWithGoogle} disabled={isGoogleLoading}>
-        <PressableIcon icon="google" size={20} color={theme.colors.palette.neutral800} containerStyle={themed($socialIcon)} />
-        {isGoogleLoading ? (
-          <ActivityIndicator style={themed($socialLoader)} />
-        ) : (
-          <Text style={themed($socialText)}>Continue with Google</Text>
-        )}
-      </TouchableOpacity> */}
-      <GoogleSignInButton />
-
-      {/* Sign up row */}
+      {/* Sign up link */}
       <View style={themed($signupRow)}>
-        <Text tx="loginScreen:noAccount" style={themed($noAccount)} />
-        <TouchableOpacity onPress={() => navigation.navigate("SignUp")}>
-          <Text tx="loginScreen:signUp" style={themed($signUp)} />
+        <Text style={themed($signupText)}>Don't have an account? </Text>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("SignUp")}
+          activeOpacity={0.7}
+        >
+          <Text style={themed($signupLink)}>Sign Up</Text>
         </TouchableOpacity>
       </View>
     </Screen>
@@ -228,147 +230,128 @@ export const LoginScreen: FC<LoginScreenProps> = ({ navigation }) => {
 /* Styles */
 const $screenContentContainer = ({ spacing }: any) =>
 ({
-  padding: spacing.lg,
-  alignItems: "center",
+  paddingHorizontal: spacing.lg,
+  paddingBottom: spacing.xl,
 } as ViewStyle)
 
-const $logoBox = ({ colors }: any) =>
+const $logoContainer = ({ spacing }: any) =>
 ({
-  width: 80,
-  height: 80,
-  borderRadius: 20,
+  alignItems: "center",
+  marginTop: spacing.xxl,
+  marginBottom: spacing.xl,
+} as ViewStyle)
+
+const $logoBox = ({ colors, spacing }: any) =>
+({
+  width: 100,
+  height: 100,
+  borderRadius: 24,
   backgroundColor: colors.palette.appPrimary,
   alignItems: "center",
   justifyContent: "center",
-} as ViewStyle)
-
-const $spacer = ({ spacing }: any) =>
-({
-  height: 24,
-} as ViewStyle)
-
-const $authCard = ({ colors, spacing }: any) =>
-({
-  width: "100%",
-  backgroundColor: colors.surface,
-  borderRadius: 12,
-  padding: spacing.lg,
-  shadowColor: "#c4adadff",
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.01,
-  shadowRadius: 3,
-  elevation: 1,
-} as ViewStyle)
-
-const $authTitle = ({ spacing }: any) =>
-({
-  textAlign: "center",
   marginBottom: spacing.md,
+  shadowColor: colors.palette.appPrimary,
+  shadowOffset: { width: 0, height: 8 },
+  shadowOpacity: 0.3,
+  shadowRadius: 16,
+  elevation: 8,
+} as ViewStyle)
+
+const $appName = ({ spacing }: any) =>
+({
+  fontSize: 24,
+  fontWeight: "700",
+  textAlign: "center",
 } as TextStyle)
 
-const $form = ({ }: any) =>
+const $titleContainer = ({ spacing }: any) =>
+({
+  alignItems: "center",
+  marginBottom: spacing.xl,
+} as ViewStyle)
+
+const $title = ({ }: any) =>
+({
+  fontSize: 32,
+  fontWeight: "700",
+  textAlign: "center",
+  marginBottom: 8,
+} as TextStyle)
+
+const $subtitle = ({ colors }: any) =>
+({
+  fontSize: 16,
+  textAlign: "center",
+  color: colors.palette.neutral600,
+} as TextStyle)
+
+const $form = ({ spacing }: any) =>
 ({
   width: "100%",
+  marginBottom: spacing.lg,
 } as ViewStyle)
 
 const $textField = ({ spacing }: any) =>
 ({
-  marginBottom: spacing.md,
-} as ViewStyle)
-
-const $loginButtonWrapper = ({ spacing }: any) =>
-({
-  marginTop: spacing.sm,
-} as ViewStyle)
-
-const $loginButton = ({ colors }: any) =>
-({
-  borderRadius: 25,
-  backgroundColor: colors.palette.appPrimary,
-  paddingVertical: 14,
-  alignItems: "center",
-  justifyContent: "center",
-  borderWidth: 0,
+  marginBottom: spacing.lg,
 } as ViewStyle)
 
 const $forgotButton = ({ spacing }: any) =>
 ({
-  marginTop: spacing.sm,
-  alignSelf: "center",
+  alignSelf: "flex-end",
+  marginBottom: spacing.md,
 } as ViewStyle)
 
 const $forgotText = ({ colors }: any) =>
 ({
+  fontSize: 14,
   color: colors.palette.appPrimary,
-  fontWeight: "500",
+  fontWeight: "600",
 } as TextStyle)
 
-const $dividerRow = ({ spacing }: any) =>
+const $loginButton = ({ colors, spacing }: any) =>
 ({
-  flexDirection: "row",
-  alignItems: "center",
-  marginTop: spacing.lg,
-  width: "100%",
+  borderRadius: 16,
+  backgroundColor: colors.palette.appPrimary,
+  paddingVertical: 16,
+  marginTop: spacing.sm,
+  shadowColor: colors.palette.appPrimary,
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.3,
+  shadowRadius: 8,
+  elevation: 4,
 } as ViewStyle)
 
-const $dividerLine = ({ colors }: any) =>
+const $loginButtonPressed = ({ colors }: any) =>
 ({
-  flex: 1,
-  height: 1,
-  backgroundColor: colors.palette.neutral300,
+  backgroundColor: colors.palette.appPrimary,
+  opacity: 0.8,
 } as ViewStyle)
 
-const $dividerText = ({ spacing, colors }: any) =>
+const $loginButtonText = ({ }: any) =>
 ({
-  marginHorizontal: spacing.md,
-  color: colors.palette.neutral500,
+  fontSize: 18,
+  fontWeight: "600",
+  color: "#fff",
 } as TextStyle)
-
-const $socialButton = ({ colors, spacing }: any) =>
-({
-  marginTop: 16,
-  width: "100%",
-  backgroundColor: colors.palette.neutral0,
-  borderRadius: 8,
-  paddingVertical: 12,
-  alignItems: "center",
-  justifyContent: "center",
-  flexDirection: "row",
-  borderWidth: 1,
-  borderColor: colors.palette.neutral200,
-} as ViewStyle)
-
-const $socialIcon = ({ spacing }: any) =>
-({
-  marginRight: spacing.md,
-} as ViewStyle)
-
-const $socialText = ({ colors }: any) =>
-({
-  color: colors.textPrimary,
-  fontWeight: "500",
-} as TextStyle)
-
-const $socialLoader = ({ spacing }: any) =>
-({
-  marginLeft: spacing.md,
-} as ViewStyle)
 
 const $signupRow = ({ spacing }: any) =>
 ({
   flexDirection: "row",
   alignItems: "center",
-  marginTop: 24,
+  justifyContent: "center",
+  marginTop: spacing.xl,
 } as ViewStyle)
 
-const $noAccount = ({ colors }: any) =>
+const $signupText = ({ colors }: any) =>
 ({
+  fontSize: 15,
   color: colors.palette.neutral600,
-  marginRight: 6,
 } as TextStyle)
 
-const $signUp = ({ colors }: any) =>
+const $signupLink = ({ colors }: any) =>
 ({
+  fontSize: 15,
   color: colors.palette.appPrimary,
-  fontWeight: "600",
+  fontWeight: "700",
 } as TextStyle)

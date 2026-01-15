@@ -20,16 +20,43 @@ export interface RecipeCardProps {
      */
     style?: StyleProp<ViewStyle>
     /**
-     * Press handler
+     * Press handler for card
      */
     onPress?: (recipe: Recipe) => void
+    /**
+     * Like button handler
+     */
+    onLike?: (recipe: Recipe) => void
+    /**
+     * Save/bookmark button handler
+     */
+    onSave?: (recipe: Recipe) => void
+    /**
+     * Share button handler
+     */
+    onShare?: (recipe: Recipe) => void
 }
 
 /**
  * A card component that displays a recipe's image, title, and key details.
  */
 export function RecipeCard(props: RecipeCardProps) {
-    const { recipe, style, onPress } = props
+    const { recipe, style, onPress, onLike, onSave, onShare } = props
+
+    const handleLike = (e: any) => {
+        e?.stopPropagation?.()
+        onLike?.(recipe)
+    }
+
+    const handleSave = (e: any) => {
+        e?.stopPropagation?.()
+        onSave?.(recipe)
+    }
+
+    const handleShare = (e: any) => {
+        e?.stopPropagation?.()
+        onShare?.(recipe)
+    }
 
     return (
         <TouchableOpacity
@@ -46,9 +73,13 @@ export function RecipeCard(props: RecipeCardProps) {
                         <Text style={$badgeText} size="xs">{recipe.rating.toFixed(1)}</Text>
                     </View>
                 </View>
-                <View style={$bookmarkContainer}>
-                    <Icon icon="heart" size={20} color={colors.palette.neutral100} />
-                </View>
+                <TouchableOpacity style={$bookmarkContainer} onPress={handleSave}>
+                    <Icon
+                        icon={recipe.isSaved ? "bookmark" : "bookmarkOutline"}
+                        size={20}
+                        color={recipe.isSaved ? colors.palette.primary500 : colors.palette.neutral100}
+                    />
+                </TouchableOpacity>
             </View>
 
             {/* Content */}
@@ -72,9 +103,11 @@ export function RecipeCard(props: RecipeCardProps) {
                         <Icon icon="components" size={14} color={colors.palette.primary500} />
                         <Text style={$metaText}>{recipe.difficulty || "Medium"}</Text>
                     </View>
-                    <View style={[$metaItem, { marginLeft: spacing.md }]}>
-                        <Text style={$metaText}>🔥 {recipe.calories || 320} kcal</Text>
-                    </View>
+                    {recipe.calories && (
+                        <View style={[$metaItem, { marginLeft: spacing.md }]}>
+                            <Text style={$metaText}>🔥 {recipe.calories} kcal</Text>
+                        </View>
+                    )}
                 </View>
 
                 {/* Footer: Author & Social Actions */}
@@ -89,14 +122,15 @@ export function RecipeCard(props: RecipeCardProps) {
 
                     {/* Social Actions */}
                     <View style={$socialActions}>
-                        <TouchableOpacity style={$actionButton}>
-                            <Icon icon="heartOutline" size={18} color={colors.palette.primary500} />
+                        <TouchableOpacity style={$actionButton} onPress={handleLike}>
+                            <Icon
+                                icon={recipe.isLiked ? "heart" : "heartOutline"}
+                                size={18}
+                                color={recipe.isLiked ? colors.palette.angry500 : colors.palette.primary500}
+                            />
                             <Text style={$actionText}>{recipe.likesCount || 0}</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={$actionButton}>
-                            <Icon icon="bookmarkOutline" size={18} color={colors.palette.primary500} />
-                        </TouchableOpacity>
-                        <TouchableOpacity style={$actionButton}>
+                        <TouchableOpacity style={$actionButton} onPress={handleShare}>
                             <Icon icon="share" size={18} color={colors.palette.primary500} />
                         </TouchableOpacity>
                     </View>

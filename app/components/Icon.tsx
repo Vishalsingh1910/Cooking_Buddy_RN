@@ -62,7 +62,7 @@ export const iconRegistry = {
   components: { kind: "image", src: require("@assets/icons/demo/components.png") },
   debug: { kind: "image", src: require("@assets/icons/demo/debug.png") },
   github: { kind: "image", src: require("@assets/icons/demo/github.png") },
-  heart: { kind: "image", src: require("@assets/icons/demo/heart.png") },
+  // heart: { kind: "image", src: require("@assets/icons/demo/heart.png") }, // Replaced with vector icon
   hidden: { kind: "image", src: require("@assets/icons/hidden.png") },
   ladybug: { kind: "image", src: require("@assets/icons/ladybug.png") },
   lock: { kind: "image", src: require("@assets/icons/lock.png") },
@@ -83,6 +83,7 @@ export const iconRegistry = {
   share: { kind: "vector", pack: "MaterialCommunityIcons", name: "share-variant" },
   bookmark: { kind: "vector", pack: "MaterialCommunityIcons", name: "bookmark" },
   bookmarkOutline: { kind: "vector", pack: "MaterialCommunityIcons", name: "bookmark-outline" },
+  heart: { kind: "vector", pack: "MaterialCommunityIcons", name: "heart" },
   heartOutline: { kind: "vector", pack: "MaterialCommunityIcons", name: "heart-outline" },
   chat: { kind: "vector", pack: "Ionicons", name: "chatbubble-outline" },
   clock: { kind: "vector", pack: "MaterialCommunityIcons", name: "clock-outline" },

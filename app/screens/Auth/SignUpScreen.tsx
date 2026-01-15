@@ -149,12 +149,14 @@ export const SignupScreen: FC<SignupScreenProps> = ({ navigation }) => {
           helper={emailError}
           status={emailError ? "error" : undefined}
           onSubmitEditing={() => passwordRef.current?.focus()}
-          LeftAccessory={() => (
-            <PressableIcon
-              icon="community"
-              size={20}
-              color={theme.colors.palette.neutral600}
-            />
+          LeftAccessory={(props) => (
+            <View style={props.style}>
+              <PressableIcon
+                icon="community"
+                size={20}
+                color={theme.colors.palette.neutral600}
+              />
+            </View>
           )}
         />
 
@@ -173,12 +175,14 @@ export const SignupScreen: FC<SignupScreenProps> = ({ navigation }) => {
           status={passwordError ? "error" : undefined}
           onSubmitEditing={signup}
           RightAccessory={PasswordRightAccessory}
-          LeftAccessory={() => (
-            <PressableIcon
-              icon="lock"
-              size={20}
-              color={theme.colors.palette.neutral600}
-            />
+          LeftAccessory={(props) => (
+            <View style={props.style}>
+              <PressableIcon
+                icon="lock"
+                size={20}
+                color={theme.colors.palette.neutral600}
+              />
+            </View>
           )}
         />
 

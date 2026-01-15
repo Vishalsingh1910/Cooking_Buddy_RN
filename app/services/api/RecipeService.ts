@@ -3,6 +3,10 @@ import { Recipe } from "../../models/Recipe"
 
 export const RecipeService = {
     async getRecipes(): Promise<Recipe[]> {
+        // Get current user ID
+        const { data: { session } } = await supabase.auth.getSession()
+        const currentUserId = session?.user?.id
+
         const { data, error } = await supabase
             .from("recipes")
             .select(`
@@ -21,7 +25,33 @@ export const RecipeService = {
             return []
         }
 
-        return data.map((item: any) => mapSupabaseToRecipe(item))
+        // If user is logged in, fetch their likes and saves
+        let userLikes: Set<string> = new Set()
+        let userSaves: Set<string> = new Set()
+
+        if (currentUserId) {
+            // Fetch user's likes
+            const { data: likesData } = await supabase
+                .from("recipe_likes")
+                .select("recipe_id")
+                .eq("user_id", currentUserId)
+
+            if (likesData) {
+                userLikes = new Set(likesData.map(l => l.recipe_id))
+            }
+
+            // Fetch user's saves
+            const { data: savesData } = await supabase
+                .from("saved_recipes")
+                .select("recipe_id")
+                .eq("user_id", currentUserId)
+
+            if (savesData) {
+                userSaves = new Set(savesData.map(s => s.recipe_id))
+            }
+        }
+
+        return data.map((item: any) => mapSupabaseToRecipe(item, userLikes, userSaves))
     },
 
     async getRecipeById(id: string): Promise<Recipe | null> {
@@ -235,38 +265,31 @@ export const RecipeService = {
     }
 }
 
-function mapSupabaseToRecipe(data: any, currentUserId?: string): Recipe {
+function mapSupabaseToRecipe(data: any, userLikes?: Set<string>, userSaves?: Set<string>): Recipe {
     const user = data.users
-    const likes = data.recipe_likes || []
-    const isLiked = Array.isArray(likes) ? likes.some((l: any) => l.user_id === currentUserId) : false
-
-    // For list view, we might not fetch all specific likes rows to check ownership easily without mapped data
-    // optimization: backend should return boolean `is_liked_by_user`. 
-    // For now, assuming `recipe_likes` in select includes user_id if we filter by it, but we select count.
-    // To correctly check `isLiked` in list, we actually need to select `recipe_likes!left(user_id)` with filter.
-    // For simplicity in this demo, we might skip `isLiked` in list or do a separate check.
-    // Let's rely on data passed in.
+    const recipeId = data.recipe_id?.toString() || data.id?.toString() || ""
 
     return {
-        id: data.recipe_id?.toString() || data.id?.toString() || "",
+        id: recipeId,
         title: data.title || "Untitled Recipe",
-        imageUrl: data.image_url || "",
+        imageUrl: data.image_url || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800",
         authorName: user?.display_name || "Chef",
-        authorImageUrl: user?.photo_url || "https://images.unsplash.com/photo-1583394293214-28ded15ee548?w=100",
+        authorImageUrl: user?.photo_url || "https://i.pravatar.cc/150?img=12",
         authorUsername: user?.display_name?.toLowerCase() || "chef",
         description: data.description || "",
         ingredients: data.ingredients || [],
         steps: data.steps || [],
         cookingTimeMinutes: data.cooking_time_minutes || 30,
-        rating: data.rating || 4.5,
-        servings: 4,
+        rating: data.rating || 0,
+        servings: data.servings || 4,
         difficulty: data.difficulty || "Medium",
+        calories: data.calories || null,
         likesCount: data.recipe_likes?.[0]?.count || 0,
         commentsCount: data.recipe_comments?.[0]?.count || 0,
         cooksCount: 0,
         createdAt: data.created_at,
-        isLiked: false, // implementation of checking this in list is complex with just one query unless using views matches
-        isSaved: false,
+        isLiked: userLikes ? userLikes.has(recipeId) : false,
+        isSaved: userSaves ? userSaves.has(recipeId) : false,
         comments: Array.isArray(data.recipe_comments) ? data.recipe_comments.map((c: any) => ({
             id: c.id,
             text: c.text,
