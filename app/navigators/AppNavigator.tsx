@@ -14,7 +14,7 @@ import { LoginScreen } from "@/screens/Auth/LoginScreen"
 import { WelcomeScreen } from "@/screens/WelcomeScreen"
 import { useAppTheme } from "@/theme/context"
 
-import { DemoNavigator } from "./DemoNavigator"
+import { TabNavigator } from "./TabNavigator"
 import { navigationRef, useBackButtonHandler } from "./navigationUtilities"
 import type { AppStackParamList, NavigationProps } from "./navigationTypes"
 import { SignupScreen } from "@/screens/Auth/SignUpScreen"
@@ -59,11 +59,11 @@ const AppStack = () => {
           backgroundColor: colors.background,
         },
       }}
-      initialRouteName={isAuthenticated ? "Demo" : "Welcome"}
+      initialRouteName={isAuthenticated ? "Main" : "Welcome"}
     >
       {isAuthenticated ? (
         <>
-          <Stack.Screen name="Demo" component={DemoNavigator} />
+          <Stack.Screen name="Main" component={TabNavigator} />
           <Stack.Screen name="RecipeDetail" component={RecipeDetailScreen} />
           <Stack.Screen name="AddRecipe" component={AddRecipeScreen} />
           <Stack.Screen name="MyRecipes" component={MyRecipesScreen} />

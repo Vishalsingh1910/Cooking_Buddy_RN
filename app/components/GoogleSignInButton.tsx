@@ -17,7 +17,7 @@ const redirectTo = makeRedirectUri({
 
 console.log('REDIRECT TO:', redirectTo)
 
-const createSessionFromUrl = async (url: string, setAuthToken: (token: string) => void) => {
+const createSessionFromUrl = async (url: string) => {
   const { params, errorCode } = QueryParams.getQueryParams(url)
 
   if (errorCode) throw new Error(errorCode)
@@ -35,14 +35,14 @@ const createSessionFromUrl = async (url: string, setAuthToken: (token: string) =
   if (error) throw error
 
   // 👇 THIS AUTOMATICALLY TRIGGERS YOUR NAVIGATION LOGIC
-  if (data.session?.access_token) {
-    setAuthToken(data.session.access_token)
-  }
+  // if (data.session?.access_token) {
+  //   setAuthToken(data.session.access_token)
+  // }
 
   return data.session
 }
 
-const signInWithGoogle = async (setAuthToken: (token: string) => void) => {
+const signInWithGoogle = async () => {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
@@ -62,25 +62,25 @@ const signInWithGoogle = async (setAuthToken: (token: string) => void) => {
   )
 
   if (res.type === 'success' && res.url) {
-    await createSessionFromUrl(res.url, setAuthToken)
+    await createSessionFromUrl(res.url)
   }
 }
 
 export default function GoogleSignInButton() {
-  const { setAuthToken } = useAuth()  // your existing setter
+  //   const { setAuthToken } = useAuth()  // your existing setter
   const url = Linking.useURL()
 
   // Handle deep link (for Android/iOS returning to app)
   React.useEffect(() => {
     if (url) {
-      createSessionFromUrl(url, setAuthToken)
+      createSessionFromUrl(url)
     }
   }, [url])
 
   return (
     <Button
       title="Continue with Google"
-      onPress={() => signInWithGoogle(setAuthToken)}
+      onPress={() => signInWithGoogle()}
     />
   )
 }

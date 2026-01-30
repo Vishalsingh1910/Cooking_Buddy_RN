@@ -8,7 +8,7 @@ import {
     ViewStyle,
 } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
-import { DemoTabScreenProps } from "@/navigators/navigationTypes"
+import { TabScreenProps } from "@/navigators/navigationTypes"
 import { Screen } from "@/components/Screen"
 import { Text } from "@/components/Text"
 import { RecipeCard } from "@/components/RecipeCard"
@@ -20,7 +20,7 @@ import { useAuth } from "@/context/AuthContext"
 import { IngredientInputSection } from "@/components/IngredientInputSection"
 import { AIRecipeService } from "@/services/api/AIRecipeService"
 
-export const HomeScreen: FC<DemoTabScreenProps<"Home">> = ({ navigation }) => {
+export const HomeScreen: FC<TabScreenProps<"Home">> = ({ navigation }) => {
     const { themed, theme } = useAppTheme()
     const { session, userProfile } = useAuth()
     const user = session?.user

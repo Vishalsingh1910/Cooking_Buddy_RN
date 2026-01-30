@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useCallback } from "react"
-import { Animated, Image, ImageStyle, Platform, StyleProp, View, ViewStyle } from "react-native"
+import { Animated, Image, ImageStyle, Platform, StyleProp, View, ViewStyle, ImageSourcePropType } from "react-native"
 
 import { iconRegistry } from "@/components/Icon"
 import { isRTL } from "@/i18n"
@@ -213,7 +213,7 @@ function SwitchAccessibilityLabel(props: SwitchInputProps & { role: "on" | "off"
       {accessibilityMode === "icon" && shouldLabelBeVisible && (
         <Image
           style={[$switchAccessibilityIcon, { tintColor: color }]}
-          source={role === "off" ? iconRegistry.hidden : iconRegistry.view}
+          source={(role === "off" ? iconRegistry.hidden : iconRegistry.view) as ImageSourcePropType}
         />
       )}
     </View>

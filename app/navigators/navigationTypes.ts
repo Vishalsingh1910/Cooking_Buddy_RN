@@ -9,8 +9,9 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack"
 import { Recipe } from "@/models/Recipe"
 
 
-// Demo Tab Navigator types
-export type DemoTabParamList = {
+
+// Tab Navigator types
+export type TabParamList = {
   Home: undefined
   Recipes: undefined
   Chat: undefined
@@ -36,7 +37,7 @@ export type AppStackParamList = {
   ThemePreferences: undefined
   Chat: undefined
   ChatDetail: { name: string; profileImage: string }
-  Demo: NavigatorScreenParams<DemoTabParamList>
+  Main: NavigatorScreenParams<TabParamList>
   // 🔥 Your screens go here
   // IGNITE_GENERATOR_ANCHOR_APP_STACK_PARAM_LIST
 }
@@ -46,8 +47,8 @@ export type AppStackScreenProps<T extends keyof AppStackParamList> = NativeStack
   T
 >
 
-export type DemoTabScreenProps<T extends keyof DemoTabParamList> = CompositeScreenProps<
-  BottomTabScreenProps<DemoTabParamList, T>,
+export type TabScreenProps<T extends keyof TabParamList> = CompositeScreenProps<
+  BottomTabScreenProps<TabParamList, T>,
   AppStackScreenProps<keyof AppStackParamList>
 >
 

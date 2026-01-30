@@ -21,10 +21,10 @@ import { useAppTheme } from "@/theme/context"
 import { useAuth } from "@/context/AuthContext"
 
 // TODO: update navigator types to include this screen
-import { DemoTabScreenProps } from "@/navigators/navigationTypes"
+import { TabScreenProps } from "@/navigators/navigationTypes"
 
 // TODO: update navigator types to include this screen
-interface RecipeListScreenProps extends DemoTabScreenProps<"Home" | "Recipes"> { }
+interface RecipeListScreenProps extends TabScreenProps<"Recipes"> { }
 
 type DifficultyFilter = "All" | "Easy" | "Medium" | "Hard"
 type SortOption = "latest" | "mostLiked" | "rating"

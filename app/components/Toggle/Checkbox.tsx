@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from "react"
-import { Image, ImageStyle, Animated, StyleProp, View, ViewStyle } from "react-native"
+import { Image, ImageStyle, Animated, StyleProp, View, ViewStyle, ImageSourcePropType } from "react-native"
 
 import { useAppTheme } from "@/theme/context"
 import { $styles } from "@/theme/styles"
@@ -102,7 +102,7 @@ function CheckboxInput(props: CheckboxInputProps) {
         ]}
       >
         <Image
-          source={icon ? iconRegistry[icon] : iconRegistry.check}
+          source={(icon ? iconRegistry[icon] : iconRegistry.check) as ImageSourcePropType}
           style={[
             $checkboxDetail,
             !!iconTintColor && { tintColor: iconTintColor },
