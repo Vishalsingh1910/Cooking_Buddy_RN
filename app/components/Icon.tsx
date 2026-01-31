@@ -88,6 +88,7 @@ export const iconRegistry = {
   chat: { kind: "vector", pack: "Ionicons", name: "chatbubble-outline" },
   clock: { kind: "vector", pack: "MaterialCommunityIcons", name: "clock-outline" },
   star: { kind: "vector", pack: "AntDesign", name: "star" },
+  send: { kind: "vector", pack: "Ionicons", name: "send" },
 
   // Tab Icons (Flutter Parity)
   home: { kind: "vector", pack: "Ionicons", name: "home" },

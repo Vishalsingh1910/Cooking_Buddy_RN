@@ -65,62 +65,18 @@ export const HomeScreen: FC<TabScreenProps<"Home">> = ({ navigation }) => {
         navigation.navigate("RecipeDetail", { id: recipe.id })
     }
 
-    const handleLike = async (recipe: Recipe) => {
-        console.log("Like tapped - Current state:", { id: recipe.id, isLiked: recipe.isLiked, likesCount: recipe.likesCount })
-
-        // Optimistic update - update UI immediately
-        setTrendingRecipes(prev => prev.map(r =>
-            r.id === recipe.id
-                ? {
-                    ...r,
-                    isLiked: !r.isLiked,
-                    likesCount: r.isLiked ? r.likesCount - 1 : r.likesCount + 1
-                }
-                : r
-        ))
-
-        // Call API in background
-        try {
-            await RecipeService.toggleLike(recipe.id, recipe.isLiked)
-            console.log("Like API call successful")
-        } catch (error) {
-            console.error("Error toggling like:", error)
-            // Revert on error
-            setTrendingRecipes(prev => prev.map(r =>
-                r.id === recipe.id
-                    ? {
-                        ...r,
-                        isLiked: recipe.isLiked,
-                        likesCount: recipe.likesCount
-                    }
-                    : r
-            ))
-        }
+    const handleLike = (recipe: Recipe) => {
+        RecipeService.handleLike(recipe, (updatedRecipe) => {
+            setTrendingRecipes(prev => prev.map(r => r.id === updatedRecipe.id ? updatedRecipe : r))
+        })
     }
 
-    const handleSave = async (recipe: Recipe) => {
-        // Optimistic update - update UI immediately
-        setTrendingRecipes(prev => prev.map(r =>
-            r.id === recipe.id
-                ? { ...r, isSaved: !r.isSaved }
-                : r
-        ))
-
-        // Call API in background
-        try {
-            await RecipeService.toggleSave(recipe.id, recipe.isSaved)
-        } catch (error) {
-            console.error("Error toggling save:", error)
-            // Revert on error
-            setTrendingRecipes(prev => prev.map(r =>
-                r.id === recipe.id
-                    ? { ...r, isSaved: recipe.isSaved }
-                    : r
-            ))
-        }
+    const handleSave = (recipe: Recipe) => {
+        RecipeService.handleSave(recipe, (updatedRecipe) => {
+            setTrendingRecipes(prev => prev.map(r => r.id === updatedRecipe.id ? updatedRecipe : r))
+        })
     }
 
-    // Extract first name from display_name
     const getFirstName = (fullName: string | undefined) => {
         if (!fullName) return "Chef"
         return fullName.split(" ")[0]

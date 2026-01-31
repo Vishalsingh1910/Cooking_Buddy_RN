@@ -1,5 +1,6 @@
 import { supabase } from "../supabase/supabase"
 import { Recipe } from "../../models/Recipe"
+import { Alert } from "react-native"
 
 export const RecipeService = {
     async getRecipes(): Promise<Recipe[]> {
@@ -68,7 +69,11 @@ export const RecipeService = {
         ),
         recipe_likes (count),
         recipe_comments (
-            *
+            *,
+            users:user_id (
+                display_name,
+                photo_url
+            )
         )
       `)
             .eq("recipe_id", id)
@@ -147,6 +152,90 @@ export const RecipeService = {
         }
     },
 
+    async handleLike(recipe: Recipe, onUpdate: (updatedRecipe: Recipe) => void) {
+        // 1. Calculate optimistic state
+        const originalRecipe = { ...recipe }
+        const newIsLiked = !recipe.isLiked
+        const newLikesCount = newIsLiked ? recipe.likesCount + 1 : Math.max(0, recipe.likesCount - 1)
+
+        const optimisticRecipe = {
+            ...recipe,
+            isLiked: newIsLiked,
+            likesCount: newLikesCount
+        }
+
+        // 2. Update UI immediately
+        onUpdate(optimisticRecipe)
+
+        try {
+            // 3. Call API
+            // Note: We pass the *original* isLiked status to toggle it
+            await this.toggleLike(recipe.id, recipe.isLiked)
+        } catch (error) {
+            console.error("Error toggling like:", error)
+            // 4. Revert on error
+            onUpdate(originalRecipe)
+            Alert.alert("Error", "Failed to update like status")
+        }
+    },
+
+    async handleSave(recipe: Recipe, onUpdate: (updatedRecipe: Recipe) => void) {
+        // 1. Calculate optimistic state
+        const originalRecipe = { ...recipe }
+        const newIsSaved = !recipe.isSaved
+
+        const optimisticRecipe = {
+            ...recipe,
+            isSaved: newIsSaved
+        }
+
+        // 2. Update UI immediately
+        onUpdate(optimisticRecipe)
+
+        try {
+            // 3. Call API
+            await this.toggleSave(recipe.id, recipe.isSaved)
+        } catch (error) {
+            console.error("Error toggling save:", error)
+            // 4. Revert on error
+            onUpdate(originalRecipe)
+            Alert.alert("Error", "Failed to update save status")
+        }
+    },
+
+    async addComment(recipeId: string, text: string) {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) throw new Error("Not authenticated")
+
+        const { data, error } = await supabase
+            .from("recipe_comments")
+            .insert({
+                recipe_id: recipeId,
+                user_id: session.user.id,
+                text: text
+            })
+            .select(`
+                *,
+                users:user_id (
+                    display_name,
+                    photo_url
+                )
+            `)
+            .single()
+
+        if (error) throw error
+
+        return {
+            id: data.id,
+            text: data.text,
+            createdAt: data.created_at,
+            authorName: data.users?.display_name || "Unknown",
+            authorImageUrl: data.users?.photo_url || "",
+            likesCount: 0,
+            isLiked: false
+        }
+    },
+
     async getUserRecipes(userId: string): Promise<Recipe[]> {
         try {
             console.log("Fetching recipes for user:", userId, "Type:", typeof userId)
@@ -218,9 +307,9 @@ export const RecipeService = {
         if (!session) throw new Error("Not authenticated")
 
         try {
-            // Convert image URI to blob
+            // Convert image URI to ArrayBuffer (better for RN)
             const response = await fetch(imageUri)
-            const blob = await response.blob()
+            const arrayBuffer = await response.arrayBuffer()
 
             // Create unique filename
             const fileName = `${session.user.id}_recipe_${Date.now()}.jpg`
@@ -228,7 +317,8 @@ export const RecipeService = {
             // Upload to Supabase Storage
             const { data, error } = await supabase.storage
                 .from("recipe-images")
-                .upload(fileName, blob, {
+                .upload(fileName, arrayBuffer, {
+                    contentType: 'image/jpeg',
                     cacheControl: "3600",
                     upsert: false,
                 })

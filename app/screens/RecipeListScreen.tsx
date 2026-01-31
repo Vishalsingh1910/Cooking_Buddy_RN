@@ -1,4 +1,5 @@
-import React, { FC, useEffect, useState, useMemo } from "react"
+import React, { FC, useState, useMemo, useCallback } from "react"
+import { useFocusEffect } from "@react-navigation/native"
 import {
     View,
     ViewStyle,
@@ -7,9 +8,7 @@ import {
     TextInput,
     TextStyle,
     Modal,
-    ScrollView,
 } from "react-native"
-import { AppStackScreenProps } from "@/navigators/navigationTypes"
 import { Screen } from "@/components/Screen"
 import { Text } from "@/components/Text"
 import { Icon } from "@/components/Icon"
@@ -46,9 +45,11 @@ export const RecipeListScreen: FC<RecipeListScreenProps> = ({ navigation }) => {
     const [viewMode, setViewMode] = useState<ViewMode>("list")
     const [displayedCount, setDisplayedCount] = useState(ITEMS_PER_PAGE)
 
-    useEffect(() => {
-        fetchRecipes()
-    }, [])
+    useFocusEffect(
+        useCallback(() => {
+            fetchRecipes()
+        }, [])
+    )
 
     const fetchRecipes = async () => {
         setIsLoading(true)
@@ -127,8 +128,19 @@ export const RecipeListScreen: FC<RecipeListScreenProps> = ({ navigation }) => {
         navigation.navigate("RecipeDetail", { id: recipe.id })
     }
 
+    const handleLike = (recipe: Recipe) => {
+        RecipeService.handleLike(recipe, (updatedRecipe) => {
+            setRecipes(prev => prev.map(r => r.id === updatedRecipe.id ? updatedRecipe : r))
+        })
+    }
+
+    const handleSave = (recipe: Recipe) => {
+        RecipeService.handleSave(recipe, (updatedRecipe) => {
+            setRecipes(prev => prev.map(r => r.id === updatedRecipe.id ? updatedRecipe : r))
+        })
+    }
+
     const handleAddRecipe = () => {
-        // @ts-ignore - navigation types need to be updated
         navigation.navigate("AddRecipe")
     }
 
@@ -226,6 +238,8 @@ export const RecipeListScreen: FC<RecipeListScreenProps> = ({ navigation }) => {
                         <RecipeCard
                             recipe={item}
                             onPress={handleRecipePress}
+                            onLike={handleLike}
+                            onSave={handleSave}
                             style={viewMode === "grid" ? themed($gridCard) : undefined}
                         />
                     )}

@@ -10,7 +10,10 @@ import {
     Animated,
     Dimensions,
     Alert,
-    StyleSheet
+    StyleSheet,
+    TextInput,
+    KeyboardAvoidingView,
+    Platform
 } from "react-native"
 import { AppStackScreenProps } from "@/navigators/navigationTypes"
 import { Screen } from "@/components/Screen"
@@ -36,8 +39,11 @@ export const RecipeDetailScreen: FC<RecipeDetailScreenProps> = ({ route, navigat
 
     const [recipe, setRecipe] = useState<Recipe | null>(null)
     const [isLoading, setIsLoading] = useState(true)
-    const [isLiked, setIsLiked] = useState(false)
-    const [isSaved, setIsSaved] = useState(false)
+    const [commentText, setCommentText] = useState("")
+    const [isSubmittingComment, setIsSubmittingComment] = useState(false)
+
+    const isLiked = recipe?.isLiked ?? false
+    const isSaved = recipe?.isSaved ?? false
 
     const scrollY = useRef(new Animated.Value(0)).current
 
@@ -51,8 +57,6 @@ export const RecipeDetailScreen: FC<RecipeDetailScreenProps> = ({ route, navigat
             // Check if full recipe data was passed (e.g. from AI generation)
             if (route.params.recipeData) {
                 setRecipe(route.params.recipeData)
-                setIsLiked(route.params.recipeData.isLiked)
-                setIsSaved(route.params.recipeData.isSaved)
                 setIsLoading(false)
                 return
             }
@@ -60,8 +64,6 @@ export const RecipeDetailScreen: FC<RecipeDetailScreenProps> = ({ route, navigat
             const data = await RecipeService.getRecipeById(id)
             if (data) {
                 setRecipe(data)
-                setIsLiked(data.isLiked)
-                setIsSaved(data.isSaved)
             } else {
                 Alert.alert("Error", "Recipe not found")
                 navigation.goBack()
@@ -74,35 +76,38 @@ export const RecipeDetailScreen: FC<RecipeDetailScreenProps> = ({ route, navigat
         }
     }
 
-    const toggleLike = async () => {
+    const toggleLike = () => {
         if (!recipe) return
-        const newState = !isLiked
-        setIsLiked(newState) // Optimistic
-        try {
-            await RecipeService.toggleLike(recipe.id, isLiked) // Pass *current* backend state? No, passing previous state logic depends on service impl. 
-            // Service implementation: if (isLiked) delete else insert. 
-            // So we should pass the *current state before toggle* to the service if it acted as "remove if present".
-            // But my service logic: check isLiked arg. If true -> delete. So I should pass the *original* state (isLiked state before toggle).
-            // Wait, let's check service logic:
-            // if (isLiked) { delete } else { insert }
-            // So if I am currently liked (true), I want to unlike. So passing `true` works.
-            // If I am not liked (false), I want to like. So passing `false` works.
-            // Ideally should update local count too.
-        } catch (e) {
-            setIsLiked(!newState) // Revert
-            Alert.alert("Error", "Failed to update like")
-        }
+        RecipeService.handleLike(recipe, (updated) => {
+            setRecipe(updated)
+        })
     }
 
-    const toggleSave = async () => {
+    const toggleSave = () => {
         if (!recipe) return
-        const newState = !isSaved
-        setIsSaved(newState)
+        RecipeService.handleSave(recipe, (updated) => setRecipe(updated))
+    }
+
+    const handleAddComment = async () => {
+        if (!recipe || !commentText.trim()) return
+
+        setIsSubmittingComment(true)
         try {
-            await RecipeService.toggleSave(recipe.id, isSaved)
-        } catch (e) {
-            setIsSaved(!newState)
-            Alert.alert("Error", "Failed to save recipe")
+            const newComment = await RecipeService.addComment(recipe.id, commentText.trim())
+
+            // Update local state
+            const updatedRecipe = {
+                ...recipe,
+                comments: [newComment, ...recipe.comments],
+                commentsCount: recipe.commentsCount + 1
+            }
+            setRecipe(updatedRecipe)
+            setCommentText("")
+        } catch (e: any) {
+            Alert.alert("Error", "Failed to post comment. Please try again.")
+            console.error(e)
+        } finally {
+            setIsSubmittingComment(false)
         }
     }
 
@@ -152,7 +157,13 @@ export const RecipeDetailScreen: FC<RecipeDetailScreenProps> = ({ route, navigat
                 <View style={$contentContainer}>
                     {/* Stats */}
                     <View style={$statsRow}>
-                        <StatItem icon="heart" value={recipe.likesCount.toString()} label="Likes" color={isLiked ? colors.palette.appPrimary : colors.textDim} />
+                        <StatItem
+                            icon="heart"
+                            value={recipe.likesCount.toString()}
+                            label="Likes"
+                            color={isLiked ? colors.palette.appPrimary : colors.textDim}
+                            onPress={toggleLike}
+                        />
                         <StatItem icon="chat" value={recipe.commentsCount.toString()} label="Comments" color={colors.textDim} />
                         <StatItem icon="clock" value={`${recipe.cookingTimeMinutes}m`} label="Time" color={colors.textDim} />
                         <StatItem icon="star" value={recipe.rating.toFixed(1)} label="Rating" color={colors.palette.angry500} />
@@ -180,9 +191,43 @@ export const RecipeDetailScreen: FC<RecipeDetailScreenProps> = ({ route, navigat
                         ))}
                     </Section>
 
-                    {/* Comments Placeholder */}
+                    {/* Comments Section */}
                     <Section title="Comments">
-                        <Text style={{ color: colors.textDim }}>Comments section coming soon...</Text>
+                        {recipe.comments && recipe.comments.length > 0 ? (
+                            recipe.comments.map((comment, i) => (
+                                <View key={comment.id || i} style={$commentRow}>
+                                    <Image source={{ uri: comment.authorImageUrl || "https://i.pravatar.cc/150" }} style={$commentAuthorImage} />
+                                    <View style={$commentContent}>
+                                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <Text style={$commentAuthorName}>{comment.authorName}</Text>
+                                            <Text style={$commentDate}>{new Date(comment.createdAt).toLocaleDateString()}</Text>
+                                        </View>
+                                        <Text style={$commentText}>{comment.text}</Text>
+                                    </View>
+                                </View>
+                            ))
+                        ) : (
+                            <Text style={{ color: colors.textDim, fontStyle: 'italic', marginBottom: spacing.md }}>No comments yet. Be the first!</Text>
+                        )}
+
+                        {/* Add Comment Input */}
+                        <View style={$addCommentContainer}>
+                            <TextInput
+                                style={$commentInput}
+                                placeholder="Add a comment..."
+                                placeholderTextColor={colors.textDim}
+                                value={commentText}
+                                onChangeText={setCommentText}
+                                multiline
+                            />
+                            <TouchableOpacity
+                                style={$sendButton}
+                                onPress={handleAddComment}
+                                disabled={isSubmittingComment || !commentText.trim()}
+                            >
+                                <Icon icon="send" color={(!commentText.trim() || isSubmittingComment) ? colors.textDim : colors.palette.appPrimary} size={24} />
+                            </TouchableOpacity>
+                        </View>
                     </Section>
                 </View>
             </Animated.ScrollView>
@@ -240,14 +285,25 @@ export const RecipeDetailScreen: FC<RecipeDetailScreenProps> = ({ route, navigat
     )
 }
 
-const StatItem = ({ icon, value, label, color }: any) => (
-    <View style={{ alignItems: 'center' }}>
-        {/* Placeholder for Icon usage, assuming icon prop name matches */}
-        <Icon icon={icon} color={color} size={20} />
-        <Text style={{ fontWeight: 'bold', marginTop: 4 }}>{value}</Text>
-        <Text style={{ fontSize: 12, color: colors.textDim }}>{label}</Text>
-    </View>
-)
+const StatItem = ({ icon, value, label, color, onPress }: any) => {
+    const Content = (
+        <View style={{ alignItems: 'center' }}>
+            <Icon icon={icon} color={color} size={20} />
+            <Text style={{ fontWeight: 'bold', marginTop: 4 }}>{value}</Text>
+            <Text style={{ fontSize: 12, color: colors.textDim }}>{label}</Text>
+        </View>
+    )
+
+    if (onPress) {
+        return (
+            <TouchableOpacity onPress={onPress}>
+                {Content}
+            </TouchableOpacity>
+        )
+    }
+
+    return Content
+}
 
 const Section = ({ title, children }: any) => (
     <View style={$section}>
@@ -381,4 +437,46 @@ const $saveButton: ViewStyle = {
 }
 const $saveButtonText: TextStyle = {
     color: 'white', fontWeight: 'bold'
+}
+
+const $commentRow: ViewStyle = {
+    flexDirection: 'row',
+    marginBottom: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.palette.neutral200,
+    paddingBottom: spacing.sm
+}
+const $commentAuthorImage: ImageStyle = {
+    width: 32, height: 32, borderRadius: 16, marginRight: spacing.sm
+}
+const $commentContent: ViewStyle = {
+    flex: 1,
+}
+const $commentAuthorName: TextStyle = {
+    fontWeight: 'bold', fontSize: 14, marginBottom: 2
+}
+const $commentText: TextStyle = {
+    fontSize: 14, lineHeight: 20, color: colors.text
+}
+const $commentDate: TextStyle = {
+    fontSize: 10, color: colors.textDim
+}
+const $addCommentContainer: ViewStyle = {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: spacing.sm,
+    backgroundColor: colors.palette.neutral200,
+    borderRadius: 24,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4
+}
+const $commentInput: TextStyle = {
+    flex: 1,
+    minHeight: 40,
+    paddingHorizontal: spacing.sm,
+    color: colors.text,
+    fontSize: 14
+}
+const $sendButton: ViewStyle = {
+    padding: spacing.sm,
 }
