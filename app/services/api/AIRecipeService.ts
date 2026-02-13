@@ -1,63 +1,30 @@
 import { Recipe } from "../../models/Recipe"
-
-const BASE_URL = "https://cooking-buddy-apis.onrender.com"
-const GENERATE_RECIPE_ENDPOINT = "/generate_recipe"
+import { supabase } from "../supabase/supabase"
 
 export const AIRecipeService = {
-    async generateRecipe(ingredients: string[]): Promise<Recipe> {
-        const url = `${BASE_URL}${GENERATE_RECIPE_ENDPOINT}`
+  async generateRecipe(ingredients: string[]) {
+    const { data: sessionData } = await supabase.auth.getSession()
+    const token = sessionData?.session?.access_token
 
-        try {
-            // Clean and format ingredients
-            const cleanIngredients = processIngredients(ingredients)
+    if (!token) {
+      throw new Error("No access token found")
+    }
 
-            if (cleanIngredients.length === 0) {
-                throw new Error("No valid ingredients provided")
-            }
+    const { data, error } = await supabase.functions.invoke(
+      "generate-recipe",
+      {
+        body: { ingredients },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    )
 
-            // Limit to 12 ingredients
-            const finalIngredients = cleanIngredients.slice(0, 12)
+    console.log('dataaaa', data)
 
-            console.log("🚀 Generating recipe with ingredients:", finalIngredients)
-
-            const response = await fetch(url, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Accept: "application/json",
-                },
-                body: JSON.stringify({ ingredients: finalIngredients }),
-            })
-
-            console.log("📡 API Response Status:", response.status)
-
-            if (response.ok) {
-                const data = await response.json()
-                console.log("✅ Recipe received:", data.title)
-
-                return mapAIToRecipe(data)
-            } else {
-                const errorText = await response.text()
-                console.error("❌ API Error:", response.status, errorText)
-                try {
-                    const errorJson = JSON.parse(errorText)
-                    throw new Error(errorJson.error || "Unknown API Error")
-                } catch (e) {
-                    throw new Error(`API Error ${response.status}: ${errorText}`)
-                }
-            }
-        } catch (e) {
-            console.error("⚠️ Exception:", e)
-            throw e
-        }
-    },
-}
-
-function processIngredients(ingredients: string[]): string[] {
-    return ingredients
-        .map((i) => i.trim().toLowerCase())
-        .filter((i) => i.length > 0)
-        .filter((val, index, self) => self.indexOf(val) === index) // Unique
+    if (error) throw error
+    return mapAIToRecipe(data)
+  },
 }
 
 function mapAIToRecipe(data: any): Recipe {
@@ -90,13 +57,13 @@ function mapAIToRecipe(data: any): Recipe {
         authorName: "AI Chef",
         authorImageUrl: "https://cdn-icons-png.flaticon.com/512/4712/4712109.png", // Generic robot/AI icon
         authorUsername: "aichef",
-        description: "AI-generated recipe using your selected ingredients",
+        description: data.description || "AI-generated recipe using your selected ingredients",
         ingredients: Array.isArray(data.ingredients) ? data.ingredients : [],
         steps: steps,
-        cookingTimeMinutes: estimateCookingTime(steps),
+        cookingTimeMinutes: data.cooking_time_minutes || estimateCookingTime(steps),
         rating: 4.5, // Default rating for AI recipes
-        servings: 2, // Default servings
-        difficulty: "Medium",
+        servings: data.servings || 2,
+        difficulty: data.difficulty || "Medium",
         likesCount: 0,
         commentsCount: 0,
         cooksCount: 0,

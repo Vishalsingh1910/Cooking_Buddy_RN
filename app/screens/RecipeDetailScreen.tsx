@@ -44,6 +44,9 @@ export const RecipeDetailScreen: FC<RecipeDetailScreenProps> = ({ route, navigat
 
     const isLiked = recipe?.isLiked ?? false
     const isSaved = recipe?.isSaved ?? false
+    
+    // Check if it's an AI generated recipe (temporary ID starting with 'ai_')
+    const isAIRecipe = recipe?.id?.toString().startsWith('ai_')
 
     const scrollY = useRef(new Animated.Value(0)).current
 
@@ -108,6 +111,22 @@ export const RecipeDetailScreen: FC<RecipeDetailScreenProps> = ({ route, navigat
             console.error(e)
         } finally {
             setIsSubmittingComment(false)
+        }
+    }
+
+    const handlePostRecipe = async () => {
+        if (!recipe) return
+        
+        try {
+            setIsLoading(true)
+            await RecipeService.postAIRecipe(recipe)
+            Alert.alert("Success", "Recipe posted successfully!", [
+                { text: "OK", onPress: () => navigation.goBack() }
+            ])
+        } catch (e: any) {
+            console.error(e)
+            Alert.alert("Error", "Failed to post recipe")
+            setIsLoading(false)
         }
     }
 
@@ -277,9 +296,15 @@ export const RecipeDetailScreen: FC<RecipeDetailScreenProps> = ({ route, navigat
 
                 <View style={{ flex: 1 }} />
 
-                <TouchableOpacity style={$saveButton}>
-                    <Text style={$saveButtonText}>Save Recipe</Text>
-                </TouchableOpacity>
+                {isAIRecipe ? (
+                    <TouchableOpacity style={$postButton} onPress={handlePostRecipe}>
+                        <Text style={$saveButtonText}>Post Recipe</Text>
+                    </TouchableOpacity>
+                ) : (
+                    <TouchableOpacity style={$saveButton}>
+                        <Text style={$saveButtonText}>Save Recipe</Text>
+                    </TouchableOpacity>
+                )}
             </View>
         </View>
     )
@@ -437,6 +462,11 @@ const $saveButton: ViewStyle = {
 }
 const $saveButtonText: TextStyle = {
     color: 'white', fontWeight: 'bold'
+}
+
+const $postButton: ViewStyle = {
+    backgroundColor: colors.palette.appPrimary, // Different color for posting
+    paddingHorizontal: 24, paddingVertical: 12, borderRadius: 24
 }
 
 const $commentRow: ViewStyle = {

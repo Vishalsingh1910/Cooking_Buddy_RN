@@ -126,6 +126,16 @@ export const RecipeService = {
         return await supabase.from("recipes").insert(recipeData).select().single()
     },
 
+    async postAIRecipe(recipe: Recipe) {
+        // Reuse createRecipe, ensuring we pass the image URL
+        // We strip the ID so Supabase generates a new UUID
+        const { id, ...recipeData } = recipe
+        return await this.createRecipe({
+            ...recipeData,
+            imageUrl: recipe.imageUrl
+        })
+    },
+
     async toggleLike(recipeId: string, isLiked: boolean) {
         const { data: { session } } = await supabase.auth.getSession()
         if (!session) throw new Error("Not authenticated")

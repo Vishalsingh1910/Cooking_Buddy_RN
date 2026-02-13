@@ -6,6 +6,7 @@ import {
     TouchableOpacity,
     View,
     ViewStyle,
+    Alert,
 } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { TabScreenProps } from "@/navigators/navigationTypes"
@@ -40,6 +41,7 @@ export const HomeScreen: FC<TabScreenProps<"Home">> = ({ navigation }) => {
             navigation.navigate("RecipeDetail", { id: recipe.id, recipeData: recipe } as any)
         } catch (e: any) {
             console.error("AI Generation failed", e)
+            Alert.alert("Error", e.message || "Failed to generate recipe. Please try again.")
         } finally {
             setIsGenerating(false)
         }

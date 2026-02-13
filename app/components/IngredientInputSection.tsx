@@ -109,7 +109,7 @@ export const IngredientInputSection = (props: IngredientInputSectionProps) => {
                 text={isGenerating ? "Generating..." : "Generate Recipe"}
                 preset="reversed"
                 onPress={handleGenerate}
-                disabled={ingredients.length === 0 || isGenerating}
+                disabled={ingredients.length < 2 || isGenerating}
                 style={{ marginTop: theme.spacing.md }}
                 LeftAccessory={(props) => !isGenerating ? <Icon icon="robot" color={props.style.tintColor} size={20} style={props.style} /> : null}
             />
