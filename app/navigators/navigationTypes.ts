@@ -38,8 +38,6 @@ export type AppStackParamList = {
   Chat: undefined
   ChatDetail: { name: string; profileImage: string }
   Main: NavigatorScreenParams<TabParamList>
-  // 🔥 Your screens go here
-  // IGNITE_GENERATOR_ANCHOR_APP_STACK_PARAM_LIST
 }
 
 export type AppStackScreenProps<T extends keyof AppStackParamList> = NativeStackScreenProps<
