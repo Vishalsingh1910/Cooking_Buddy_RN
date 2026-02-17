@@ -17,13 +17,6 @@ import type { TabParamList } from "./navigationTypes"
 
 const Tab = createBottomTabNavigator<TabParamList>()
 
-/**
- * This is the main navigator for the app with a bottom tab bar.
- * Each tab is a screen or stack navigator.
- *
- * More info: https://reactnavigation.org/docs/bottom-tab-navigator/
- * @returns {JSX.Element} The rendered `TabNavigator`.
- */
 export function TabNavigator() {
   const { bottom } = useSafeAreaInsets()
   const {
